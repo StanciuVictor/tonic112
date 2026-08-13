@@ -18,8 +18,8 @@
     "skipDefaultLibCheck": true,
     "strict": false,
     "paths": {
-      "@bar-app/shared": [
-        "./libs/shared/src/index.ts"
+      "@bar-app/shared-types": [
+        "./libs/shared-types/src/index.ts"
       ]
     }
   },
