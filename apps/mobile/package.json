@@ -18,6 +18,22 @@
     "react-native": "*",
     "react-native-svg": "*",
     "react-native-svg-transformer": "*",
-    "react-native-web": "*"
-  }
+    "react-native-web": "*",
+    "@nx/eslint-plugin": "*",
+    "metro-config": "*",
+    "metro-resolver": "*",
+    "@nx/devkit": "*",
+    "@nx/eslint": "*",
+    "@nx/js": "*",
+    "@nx/react": "*",
+    "enhanced-resolve": "*",
+    "picocolors": "*",
+    "semver": "*",
+    "tsconfig-paths": "*",
+    "tslib": "*",
+    "@nx/detox": "*",
+    "@nx/rollup": "*",
+    "expo-router": "*"
+  },
+  "devDependencies": {}
 }
