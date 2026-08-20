@@ -1,4 +1,4 @@
-# Claude Code Implementation Guide — 112 & Tonic
+# Claude Code Implementation Guide — Tonic 112
 
 This folder contains everything needed to implement the app autonomously,
 one Epic at a time, in Claude Code.
@@ -45,18 +45,18 @@ frontend screens that consume it, so nothing is mocked and nothing gets
 rebuilt later. Epics are ordered by dependency — each one only assumes
 what earlier Epics have already delivered.
 
-| # | Epic | Depends on |
-|---|------|-----------|
-| 01 | Foundation — monorepo, Docker Compose, CI skeleton | — |
-| 02 | Design System & Reusable Component Library | 01 |
-| 03 | Auth & Accounts | 02 |
-| 04 | Party Creation & Join Flow | 03 |
-| 05 | Roles & Bartender Promotion | 04 |
-| 06 | Drink & Ingredient Catalog | 02 (parallelizable with 03–05) |
-| 07 | Order Lifecycle & Real-Time Claiming | 05, 06 |
-| 08 | Notifications | 07 |
-| 09 | Internationalization | 06 (touches 01–08's UI strings) |
-| 10 | Observability, Security & Deployment | all prior |
+| #   | Epic                                               | Depends on                      |
+| --- | -------------------------------------------------- | ------------------------------- |
+| 01  | Foundation — monorepo, Docker Compose, CI skeleton | —                               |
+| 02  | Design System & Reusable Component Library         | 01                              |
+| 03  | Auth & Accounts                                    | 02                              |
+| 04  | Party Creation & Join Flow                         | 03                              |
+| 05  | Roles & Bartender Promotion                        | 04                              |
+| 06  | Drink & Ingredient Catalog                         | 02 (parallelizable with 03–05)  |
+| 07  | Order Lifecycle & Real-Time Claiming               | 05, 06                          |
+| 08  | Notifications                                      | 07                              |
+| 09  | Internationalization                               | 06 (touches 01–08's UI strings) |
+| 10  | Observability, Security & Deployment               | all prior                       |
 
 Epic 02 (Design System) produces no end-user-facing feature on its own —
 it's a prerequisite component library that every later Epic's frontend
@@ -71,6 +71,7 @@ sequential Claude Code workflow, following the numeric order is simplest.
 Earlier drafts of this project left two design questions open. Both are
 now fully decided and documented in the architecture spec — Claude Code
 does not need to flag these or ask before relying on them:
+
 - Multi-bartender order claiming → first-to-claim wins.
 - Customer identity → real registered accounts (with history and
   favorites) alongside fully ephemeral anonymous per-party guests, both

@@ -1,4 +1,4 @@
-# 112 & Tonic — Architecture & Product Specification
+# Tonic 112 — Architecture & Product Specification
 
 This document is the single source of truth for the product, data model, and
 architecture. It is self-contained: every decision below is final for v1
@@ -28,6 +28,7 @@ There are three roles. Only two of them are backed by a persistent global
 account.
 
 ### Admin
+
 - A single global account (the host). Not expected to scale to multiple
   admins for the foreseeable future, but the data model should not hard-code
   a single-admin assumption.
@@ -37,6 +38,7 @@ account.
 - Is automatically the first bartender of any party they create.
 
 ### Bartender
+
 - **Not a global account type.** It is a permission scoped to a single
   party, recorded as a relationship between a registered customer account
   and a specific party.
@@ -53,7 +55,9 @@ account.
   drink/ingredient catalog — that stays an Admin-only action.
 
 ### Customer
+
 Two paths, chosen at join time, both valid:
+
 - **Registered customer**: has an email + password account. Gets persistent
   order history and can mark drinks as favorites. Accounts persist across
   separate parties.
@@ -93,6 +97,7 @@ after joining, by someone already trusted — never self-declared at the door.
    changed by the customer.
 
 ### Deep-linking and native install flows — deferred to v2
+
 Everything involving an installed app — a custom URL scheme handoff from
 a QR scan, App/Play Store redirects, an in-app camera-based QR scanner,
 and eventually true OS-verified deep links (iOS Universal Links / Android
@@ -168,6 +173,7 @@ deletes, etc.) as needed.
 ## 6. Architecture & Monorepo
 
 **Nx monorepo** with:
+
 - `apps/api` — NestJS + Prisma + PostgreSQL
 - `apps/mobile` — Expo (React Native + Web targets), Expo Router with
   role-gated layouts
@@ -182,7 +188,7 @@ guest, and bartender/admin) uses the web build.
 component library built in the Design System Epic (02) is deliberately
 custom-drawn and platform-agnostic — no code depends on web-only or
 native-only APIs — specifically so that compiling native builds later via
-EAS Build is a matter of *adding* a build target, not restructuring the
+EAS Build is a matter of _adding_ a build target, not restructuring the
 app. See Epic 02's theming architecture for how this is kept cheap.
 
 **Deployment (v1, web):** Expo's static web export is served by a
@@ -193,6 +199,7 @@ static files). This is the only deployment target for v1 — there is no
 separate native deployment pipeline yet.
 
 **Runtime stack:**
+
 - State: TanStack Query for server state, Zustand for cart/local state
 - Real-time: Socket.IO for active sessions, rooms scoped per party (room key
   = party code)
@@ -215,7 +222,7 @@ implementation-facing detail rather than an architectural decision. It
 must be built before any feature-facing screen (Epic 03 onward) and every
 later Epic composes its UI from the component library it produces. The
 visual design itself is unified across iOS, Android, and Web by design —
-but v1 only *ships* on web (Section 6); iOS and Android are a v2
+but v1 only _ships_ on web (Section 6); iOS and Android are a v2
 build-target addition using the exact same components, not a per-OS
 redesign.
 
@@ -283,6 +290,7 @@ project's scale.
 
 The production server requires baseline hardening before it's exposed to
 real guests:
+
 - **SSH**: key-only authentication; password login disabled entirely.
 - **Firewall (UFW)**: only ports 80 and 443 exposed publicly. PostgreSQL is
   never published to the host — it's reachable only from other containers
@@ -391,6 +399,7 @@ pull request.
 
 These were identified and consciously accepted rather than designed
 against for v1:
+
 - **Anonymous guests can never be promoted to bartender**, including in the
   edge case where no registered participant is available to promote.
 - **No offline order queue** — a disconnected customer simply cannot submit

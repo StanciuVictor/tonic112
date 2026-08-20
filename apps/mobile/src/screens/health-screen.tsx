@@ -10,7 +10,7 @@ export default function HealthScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>112 & Tonic</Text>
+      <Text style={styles.title}>Tonic 112</Text>
       {isPending && <Text>Checking API connection…</Text>}
       {error && <Text style={styles.error}>{error.message}</Text>}
       {data && (

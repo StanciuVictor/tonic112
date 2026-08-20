@@ -1,4 +1,4 @@
-# Claude Design Prompt — 112 & Tonic
+# Claude Design Prompt — Tonic 112
 
 This file is meant to be pasted directly into Claude Design, not Claude
 Code. Its output (screen mockups/screenshots) is what then gets handed to
@@ -7,7 +7,7 @@ Claude Code as visual reference when building each Epic.
 If this is going into a fresh Claude Design session that hasn't already
 generated the approved palette earlier in this project, paste the whole
 thing as-is — all tokens are restated below so it doesn't need prior
-context. If it's going into the *same* Claude Design thread that produced
+context. If it's going into the _same_ Claude Design thread that produced
 the original palette, you can trim the Color Palette / Typography
 sections and just keep the Screens list, since it already has that
 context.
@@ -26,9 +26,9 @@ phone-shaped for every screen including that one.
 ---
 
 Generate a complete modern mobile app UI design system and all core
-screen designs for a home-party drink-ordering app called "112 & Tonic".
+screen designs for a home-party drink-ordering app called "Tonic 112".
 
-**112 & Tonic** is the app a host uses to run drink orders at a home party.
+**Tonic 112** is the app a host uses to run drink orders at a home party.
 Guests scan a QR code or enter a code to join, browse a fixed drink menu,
 and submit orders from their phones. One or more bartenders manage
 incoming orders from a live dashboard. The app helps people:
@@ -74,6 +74,7 @@ incoming orders from a live dashboard. The app helps people:
 
 **Order status pill colors** (five distinct states — this matters, don't
 collapse any of them):
+
 - New/Pending: bg `oklch(85% 0.15 95)` / text `oklch(40% 0.1 70)` (yellow)
 - Claimed: bg `oklch(90% 0.14 40)` / text `oklch(45% 0.15 30)` (coral-tinted)
 - Preparing: bg `oklch(88% 0.1 190)` / text `oklch(38% 0.1 190)` (teal)
