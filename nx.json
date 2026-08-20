@@ -25,18 +25,21 @@
   "plugins": [
     {
       "plugin": "@nx/eslint/plugin",
+      "exclude": [".agents/**", ".claude/**", ".windsurf/**"],
       "options": {
         "targetName": "lint"
       }
     },
     {
       "plugin": "@nx/jest/plugin",
+      "exclude": [".agents/**", ".claude/**", ".windsurf/**"],
       "options": {
         "targetName": "test"
       }
     },
     {
       "plugin": "@nx/expo/plugin",
+      "exclude": [".agents/**", ".claude/**", ".windsurf/**"],
       "options": {
         "startTargetName": "start",
         "buildTargetName": "build",
@@ -53,6 +56,7 @@
     },
     {
       "plugin": "@nx/webpack/plugin",
+      "exclude": [".agents/**", ".claude/**", ".windsurf/**"],
       "options": {
         "buildTargetName": "build",
         "serveTargetName": "serve",
