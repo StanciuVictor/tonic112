@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.git
+.nx
+**/.expo
+coverage
+tmp
+out-tsc
+**/*.log
+.env
+**/.env
+apps/mobile/.expo

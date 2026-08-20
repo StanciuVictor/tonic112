@@ -1,0 +1,51 @@
+# Local development stack. Postgres's port is intentionally NOT published to
+# the host: Compose concatenates multi-value keys like `ports` across -f
+# files rather than letting an override remove them, so keeping it unpublished
+# here is what makes docker-compose.prod.yml's "never expose Postgres"
+# requirement hold automatically. Run Prisma/psql against it via
+# `docker compose exec api npx prisma ...` or `docker compose exec postgres psql ...`.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: barapp
+      POSTGRES_PASSWORD: barapp_dev
+      POSTGRES_DB: barapp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U barapp -d barapp']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://barapp:barapp_dev@postgres:5432/barapp?schema=public
+      PORT: 3000
+      NODE_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Populate by running `nx run mobile:export` on the host first.
+      - ./apps/mobile/dist:/usr/share/nginx/html:ro
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
