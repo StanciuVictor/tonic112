@@ -1,8 +1,10 @@
 name: CI
 
-# Runs on every PR into main: install, lint, test, build. Never deploys -
-# deployment pipelines are added in Epic 10 as separate, manually triggered
-# workflows.
+# Runs on every PR into main: install, lint, test, build. Uses `nx affected`
+# so a PR touching only one app doesn't waste time re-running the other -
+# it also correctly re-runs both whenever libs/shared-types changes, since
+# both apps depend on it. Never deploys - deployment pipelines are added in
+# Epic 10 as separate, manually triggered workflows.
 on:
   pull_request:
     branches: [main]
@@ -12,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -21,14 +25,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npx nx run-many -t lint
+      - uses: nrwl/nx-set-shas@v5
 
-      - name: Test
-        run: npx nx run-many -t test
+      - name: Lint affected projects
+        run: npx nx affected -t lint
 
-      - name: Build api and shared-types
-        run: npx nx run-many -t build -p api shared-types
+      - name: Test affected projects
+        run: npx nx affected -t test
+
+      # Split per-project (rather than a blanket `affected -t build`)
+      # because mobile has its own inferred "build" target for native EAS
+      # builds, which needs credentials we don't have and isn't what we
+      # want CI to trigger - "export" is the web build we actually want.
+      - name: Build api
+        run: npx nx affected -t build -p api
+
+      - name: Build shared-types
+        run: npx nx affected -t build -p shared-types
 
       - name: Build mobile (web export)
-        run: npx nx run mobile:export
+        run: npx nx affected -t export -p mobile
