@@ -5,6 +5,11 @@
   "projectType": "library",
   "tags": [],
   "targets": {
+    "test": {
+      "options": {
+        "passWithNoTests": true
+      }
+    },
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": [
