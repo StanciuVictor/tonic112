@@ -1,0 +1,34 @@
+name: CI
+
+# Runs on every PR into main: install, lint, test, build. Never deploys -
+# deployment pipelines are added in Epic 10 as separate, manually triggered
+# workflows.
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npx nx run-many -t lint
+
+      - name: Test
+        run: npx nx run-many -t test
+
+      - name: Build api and shared-types
+        run: npx nx run-many -t build -p api shared-types
+
+      - name: Build mobile (web export)
+        run: npx nx run mobile:export
