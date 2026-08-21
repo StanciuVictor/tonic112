@@ -11,4 +11,4 @@ const config: Config = {
   coverageDirectory: '../../coverage/libs/shared-types',
 };
 
-export default config;
+module.exports = config;
