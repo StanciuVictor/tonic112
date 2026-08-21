@@ -38,6 +38,9 @@ testem.log
 .DS_Store
 Thumbs.db
 
+# Docker - personal local overrides, never shared/committed
+docker-compose.override.yml
+
 .nx/cache
 .nx/workspace-data
 .nx/migrate-runs
