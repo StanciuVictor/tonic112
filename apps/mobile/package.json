@@ -7,10 +7,13 @@
     "eas-build-post-install": "cd ../../ && node tools/scripts/eas-build-post-install.mjs . apps/mobile"
   },
   "dependencies": {
+    "@expo-google-fonts/fredoka": "*",
+    "@expo-google-fonts/poppins": "*",
     "@expo/vector-icons": "*",
     "@expo/metro": "*",
     "@testing-library/react-native": "*",
     "expo": "*",
+    "expo-font": "*",
     "expo-splash-screen": "*",
     "expo-status-bar": "*",
     "expo-system-ui": "*",

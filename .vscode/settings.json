@@ -1,3 +1,6 @@
 {
-  "jestrunner.configPath": "jest.config.ts"
+  "jestrunner.configPath": "jest.config.ts",
+  "cSpell.words": [
+    "Pressable"
+  ]
 }
