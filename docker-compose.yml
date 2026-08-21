@@ -5,6 +5,8 @@
 # requirement hold automatically. Run Prisma/psql against it via
 # `docker compose exec api npx prisma ...` or `docker compose exec postgres psql ...`.
 
+name: tonic112
+
 services:
   postgres:
     image: postgres:16-alpine
