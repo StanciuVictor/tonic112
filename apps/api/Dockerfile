@@ -2,7 +2,7 @@
 # because this is an Nx integrated monorepo with a single root node_modules -
 # apps/api has no package.json of its own.
 
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -13,7 +13,7 @@ COPY . .
 RUN npx prisma generate --schema apps/api/prisma/schema.prisma
 RUN npx nx run api:build
 
-FROM node:22-alpine AS runtime
+FROM node:24-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 
