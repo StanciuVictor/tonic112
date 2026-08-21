@@ -1,5 +1,5 @@
 {
-  "name": "@bar-app/shared-types",
+  "name": "@tonic112/shared-types",
   "version": "0.0.1",
   "private": true,
   "type": "commonjs",

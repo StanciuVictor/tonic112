@@ -18,7 +18,7 @@
     "skipDefaultLibCheck": true,
     "strict": false,
     "paths": {
-      "@bar-app/shared-types": [
+      "@tonic112/shared-types": [
         "./libs/shared-types/src/index.ts"
       ]
     }

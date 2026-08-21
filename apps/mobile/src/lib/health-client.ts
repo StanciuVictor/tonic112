@@ -1,4 +1,4 @@
-import { HealthResponse } from '@bar-app/shared-types';
+import { HealthResponse } from '@tonic112/shared-types';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000/api';
 

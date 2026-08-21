@@ -10,13 +10,13 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: barapp
-      POSTGRES_PASSWORD: barapp_dev
-      POSTGRES_DB: barapp
+      POSTGRES_USER: tonic112
+      POSTGRES_PASSWORD: tonic112_dev
+      POSTGRES_DB: tonic112
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U barapp -d barapp']
+      test: ["CMD-SHELL", "pg_isready -U tonic112 -d tonic112"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -27,7 +27,7 @@ services:
       dockerfile: apps/api/Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://barapp:barapp_dev@postgres:5432/barapp?schema=public
+      DATABASE_URL: postgresql://tonic112:tonic112_dev@postgres:5432/tonic112?schema=public
       PORT: 3000
       NODE_ENV: development
     depends_on:
@@ -38,7 +38,7 @@ services:
     image: nginx:1.27-alpine
     restart: unless-stopped
     ports:
-      - '80:80'
+      - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       # Populate by running `nx run mobile:export` on the host first.
