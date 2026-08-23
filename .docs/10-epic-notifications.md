@@ -1,4 +1,4 @@
-# Epic 08 — Notifications
+# Epic 10 — Notifications
 
 ## Shared Context
 
@@ -8,8 +8,8 @@ Section 6 (the `EventEmitter2` decoupling pattern) and Section 3 (only the
 `ready` status triggers a customer notification — no notification for any
 other status change).
 
-This Epic assumes Epic 07 (Order Lifecycle & Real-Time Claiming) is
-complete.
+This Epic assumes Epics 07 (Order Data Model & Claiming Logic) and 08
+(Order Real-Time UI & Bartender Dashboard) are complete.
 
 **Platform note:** v1 ships as a web app only (see the Foundation Epic),
 so this Epic only needs **Web Push** — there's no installed native app to

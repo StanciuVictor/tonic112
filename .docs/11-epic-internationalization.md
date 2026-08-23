@@ -1,4 +1,4 @@
-# Epic 09 — Internationalization
+# Epic 11 — Internationalization
 
 ## Shared Context
 
@@ -36,7 +36,7 @@ ingredient/recipe content (already bilingual in the database since Epic
 
 - Add `i18next` + `react-i18next` to `apps/mobile`.
 - Create `en.json` and `ro.json` translation files, and extract every
-  hardcoded UI string built in Epics 01–08 into them — buttons, labels,
+  hardcoded UI string built in Epics 01–10 into them — buttons, labels,
   status text (`pending`, `claimed`, `preparing`, `ready`, `cancelled`),
   error messages, and form labels.
 - Use `expo-localization` to detect the device/browser locale on first

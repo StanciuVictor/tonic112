@@ -1,4 +1,4 @@
-# Tonic 112 — Architecture & Product Specification
+# Tonic112 — Architecture & Product Specification
 
 This document is the single source of truth for the product, data model, and
 architecture. It is self-contained: every decision below is final for v1
@@ -73,15 +73,35 @@ after joining, by someone already trusted — never self-declared at the door.
 
 ## 3. Core User Journey
 
-1. **Admin creates a party.** This generates a short human-readable backup
-   code and a QR code encoding a join URL for that party.
+The app has two entry points, not one:
+
+- **The App Landing screen** — the actual root of the app, with no party
+  in play. Two options only: **"Join a Party"** and **"Log In"**. This is
+  what makes a `Customer` account genuinely usable on its own (checking
+  order history or favorites without a party open), rather than only ever
+  existing as a side effect of joining one. Admin login is deliberately
+  **not** offered here — it's reached via its own separate, unlinked
+  route, since there's only ever one Admin and no reason to surface that
+  path in guest-facing UI.
+- **A party-specific join link** (the QR/URL) — skips straight past the
+  landing screen since the party is already known.
+
+The journey:
+
+1. **Admin creates a party.** Logging in as Admin lands on **Bartender
+   Home**, which starts in an empty state (no active party yet) with a
+   "Create Party" action. Creating one generates a short human-readable
+   backup code and a QR code encoding a join URL, and Bartender Home's
+   empty state becomes its live-queue state (Section 7). The QR/code
+   isn't shown once and lost — see the header icon below.
 2. **Guests join** one of two ways:
    - Scan the QR with their phone's system camera. Since v1 ships as a web
      app only (see Section 6), the QR simply encodes a plain URL — no
      installed-app handoff logic, no fallback flicker, no App/Play Store
-     redirect. It opens directly in the browser.
-   - Enter the human-readable backup code manually on the join page — the
-     reliable fallback for anyone who can't or doesn't want to scan.
+     redirect. It opens directly in the browser, party already resolved.
+   - Tap "Join a Party" from the App Landing screen, then enter the
+     human-readable backup code manually — the path for anyone who didn't
+     arrive via a scan.
 3. **Identify themselves**: log in to a registered account, or enter a
    temporary name for this party only.
 4. **Browse the fixed drink menu** and submit an order.
@@ -95,6 +115,14 @@ after joining, by someone already trusted — never self-declared at the door.
 8. **Customers can cancel or edit their own order** only while it is still
    `pending` or `claimed`. Once it reaches `preparing`, it can no longer be
    changed by the customer.
+
+### The header QR/code modal
+
+A small icon lives in the header on **every** screen, guest-facing and
+bartender-facing alike — tapping it opens a modal with the current
+party's QR code and backup code. This is what makes the invite
+re-shareable for a late arrival without hunting for it — it isn't shown
+once at creation and then gone.
 
 ### Deep-linking and native install flows — deferred to v2
 
@@ -208,7 +236,7 @@ separate native deployment pipeline yet.
   native builds — the notification dispatch logic is already decoupled
   from order business logic via NestJS `EventEmitter2` specifically so
   that adding a second channel later doesn't touch order logic at all —
-  see Section 16 and Epic 08.
+  see Section 16 and Epic 10.
 - Database: PostgreSQL via Prisma
 
 ---
@@ -371,6 +399,14 @@ pull request.
 
 ## 16. v2 Roadmap (not to design against now, but not to block either)
 
+- **Two-phase party lifecycle**: a `draft` status on `Party` that blocks
+  guest joins until the Admin explicitly starts it (a "Start Party" step),
+  giving a prep window to get the QR ready/displayed before anyone can
+  actually join. v1 deliberately skips this — creation is immediately
+  active — since the added state isn't worth the complexity for a casual
+  home party, but it's a clean, additive change: one new enum value and
+  one new endpoint, nothing about v1's data model needs to change to
+  support it later.
 - **Native iOS and Android builds via EAS Build**, using the exact same
   component library from the Design System Epic — not a rewrite. This is
   the highest-leverage v2 item since several other v2 items depend on it:

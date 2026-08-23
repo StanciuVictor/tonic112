@@ -46,10 +46,18 @@ mobile/web app can register, log in, stay logged in, and log out.
 
 ## Frontend Tasks
 
-- Login and registration screens, shared as much as possible between the
-  Admin and Customer flows (they're structurally identical — email +
-  password — just hitting different endpoints and resulting in different
-  role state).
+- **Customer login/register screens**, reachable from the general public
+  parts of the app (linked from Epic 04's landing screen and join flow).
+- **Admin login screen**, visually similar (reuse the same form styling)
+  but reached via its own distinct route, not linked from anywhere in the
+  guest-facing UI. You're the only Admin in practice — this route just
+  needs to exist and work, not be discoverable from the public app.
+- **A minimal Profile screen** — this is the destination for a Customer
+  who logs in *without* a party in play (see Epic 04's landing screen).
+  For this Epic, build just: name/email display and a logout action.
+  Later Epics attach more to this same screen (Epic 09 adds a Favorites
+  link, Epic 11 adds the language toggle) — don't build placeholders for
+  those now, just make sure this screen exists and is easy to extend.
 - Store the JWT using Expo's cross-platform storage abstraction (not a
   web-only browser API directly) — v1 only runs on web, so this only
   needs to actually work there for now, but using the cross-platform
@@ -71,6 +79,10 @@ mobile/web app can register, log in, stay logged in, and log out.
 - An Admin and a Customer can each register, log in, and log out through
   the **web** app. Native verification isn't required for v1 (see the
   Foundation Epic's platform scope note).
+- The Admin login route is reachable but not linked from anywhere a
+  Customer or guest would naturally navigate.
+- A Customer who logs in lands on the Profile screen and can log out from
+  there.
 - Requests to admin-only and customer-only endpoints are correctly
   rejected for the wrong role or no auth at all.
 - Unit tests cover: password hashing/verification, JWT guard rejection

@@ -75,7 +75,7 @@ whole chain works, before any real feature is built.
 - GitHub Actions workflow (`ci.yml`) triggered on pull requests into
   `main`: install deps, lint, run unit tests, build both apps. This
   workflow must never deploy anything — deployment pipelines are built in
-  Epic 10.
+  Epic 14.
 
 ## Definition of Done
 - `docker compose up` locally brings up API + Postgres + nginx, and hitting

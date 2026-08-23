@@ -1,4 +1,4 @@
-# Claude Design Prompt — Tonic 112
+# Claude Design Prompt — Tonic112
 
 This file is meant to be pasted directly into Claude Design, not Claude
 Code. Its output (screen mockups/screenshots) is what then gets handed to
@@ -16,24 +16,26 @@ context.
 build. That doesn't change the visual brief below: guests will overwhelmingly
 open it on a phone browser, so every guest-facing screen should still be
 designed as a phone-shaped, portrait mockup exactly as described. The one
-screen worth a second thought is the **Bartender Dashboard** (#12) — since
-it's web, it's plausible a bartender could load it on a tablet or laptop
-propped up near the bar rather than only a phone. If you want a wider
-layout variant of that one screen generated alongside the phone version,
-say so explicitly when you paste this in; the brief below defaults to
-phone-shaped for every screen including that one.
+screen worth a second thought is **Bartender Home / Dashboard** (#7) —
+since it's web, it's plausible a bartender could load it on a tablet or
+laptop propped up near the bar rather than only a phone. If you want a
+wider layout variant of that one screen generated alongside the phone
+version, say so explicitly when you paste this in; the brief below
+defaults to phone-shaped for every screen including that one.
 
 ---
 
 Generate a complete modern mobile app UI design system and all core
-screen designs for a home-party drink-ordering app called "Tonic 112".
+screen designs for a home-party drink-ordering app called "Tonic112".
 
-**Tonic 112** is the app a host uses to run drink orders at a home party.
+**Tonic112** is the app a host uses to run drink orders at a home party.
 Guests scan a QR code or enter a code to join, browse a fixed drink menu,
 and submit orders from their phones. One or more bartenders manage
 incoming orders from a live dashboard. The app helps people:
 
 - Join a specific party via QR code or a short backup code
+- Access your account — order history, favorites — independent of any
+  specific party, via a general log-in path
 - Browse a curated, fixed drink menu, filterable by category
 - Add drinks to an order and track its status live (New → Claimed →
   Preparing → Ready)
@@ -95,25 +97,40 @@ collapse any of them):
 1. **Splash Screen** — app name/logo centered on the cream background,
    minimal, no imagery, quick.
 
-2. **Party Join Landing** — the page a QR scan opens directly in the
-   browser (v1 is web-only — no "open in app" handoff or store fallback
-   needed). Shows the party name/code being joined and a way to enter the
-   backup code manually as an alternative to scanning. Minimal,
-   reassuring, no clutter.
+2. **App Landing Screen** — the app's true root, no party context at all.
+   Just two clear pill-button choices: "Join a Party" and "Log In".
+   Nothing else on this screen — no admin option, no menu preview.
+   Minimal, welcoming, sets the playful tone immediately.
 
-3. **Identify Screen** — after a valid code/QR is confirmed: two clear
+3. **Join Entry Screen** — reached two ways, shown as one screen with two
+   states: (a) arriving via a QR scan, the party is already identified —
+   show its name/code confirmed with a clear "Continue" action; (b)
+   arriving via "Join a Party" with no code yet — show a text input for
+   the backup code instead. Include an invalid-code error state.
+
+4. **Identify Screen** — after a valid code/QR is confirmed: two clear
    pill-button choices, "Log In" and "Continue as Guest" (with a
    name-entry field for the guest path). No role selector anywhere on
    this screen.
 
-4. **Login / Register Screens** — email + password fields, rounded
-   inputs, coral primary CTA, clean single-column layout.
+5. **Login / Register Screens** — email + password fields, rounded
+   inputs, coral primary CTA, clean single-column layout. Reached from
+   both the App Landing screen and the Identify screen.
 
-5. **Create Party Screen (Admin)** — large centered QR code, the
-   human-readable backup code displayed prominently beneath it, "Start
-   Party" pill CTA.
+6. **Admin Login Screen** — same visual language as the customer login
+   above, but treat it as a distinct screen reached by its own separate
+   route — not linked from the App Landing screen or anywhere else in
+   the guest-facing flow.
 
-6. **Menu / Explore Screen (Guest)** — teal header band showing the party
+7. **Bartender Home / Dashboard** — one screen, two states. **Empty
+   state** (no active party): welcoming, a single centered "Create Party"
+   pill CTA. **Active state** (party running): coral header band with a
+   small live "active" indicator, and a chronological queue of order
+   cards below — each showing the guest's name, time submitted, a status
+   pill, the drink and its ingredients, and action buttons (Claim /
+   Advance Status) sized for quick tapping during a busy moment.
+
+8. **Menu / Explore Screen (Guest)** — teal header band showing the party
    name; a horizontal, single-select category filter chip row ("All" +
    one chip per drink category) directly below the header; a scrollable
    list of drink cards below that, each showing a small drink icon (or
@@ -121,55 +138,64 @@ collapse any of them):
    tags, a favorite heart icon, and an add button; a sticky "View Order"
    bar pinned to the bottom showing the current item count.
 
-7. **Drink Detail Screen** — larger version of the drink's icon, full
+9. **Drink Detail Screen** — larger version of the drink's icon, full
    ingredient list, ordered recipe steps, "Add to Order" pill CTA,
    favorite toggle.
 
-8. **Review Order / Cart Screen** — list of currently selected drinks
-   with quantity controls, a clear total item count, and a "Submit Order"
-   pill CTA (shown disabled/loading while the submission is in flight).
+10. **Review Order / Cart Screen** — list of currently selected drinks
+    with quantity controls, a clear total item count, and a "Submit
+    Order" pill CTA (shown disabled/loading while the submission is in
+    flight).
 
-9. **My Orders / Order Status Screen (Guest)** — a list of the guest's
-   own submitted orders, each as a card showing the drink, a status pill
-   in one of the five colors above, and cancel/edit actions that only
-   appear while the order is still eligible (New or Claimed).
+11. **My Orders / Order Status Screen (Guest)** — a list of the guest's
+    own submitted orders, each as a card showing the drink, a status pill
+    in one of the five colors above, and cancel/edit actions that only
+    appear while the order is still eligible (New or Claimed).
 
-10. **Favorites Screen (registered customers only)** — a grid or list of
+12. **Favorites Screen (registered customers only)** — a grid or list of
     starred drinks, using the same drink-card style as the menu.
+    Reachable both from the menu's heart icons and from the Profile
+    screen below.
 
-11. **Participants Screen** — list of everyone currently in the party,
+13. **Participants Screen** — list of everyone currently in the party,
     each with a small role tag (Bartender / Guest); a "Promote to
     Bartender" pill action next to eligible logged-in participants,
     visible only to current bartenders/the admin.
 
-12. **Bartender Dashboard Screen** — coral header band with a small live
-    "active" indicator; a chronological queue of order cards below, each
-    showing the guest's name, time submitted, a status pill, the drink
-    and its ingredients, and action buttons (Claim / Advance Status)
-    sized for quick tapping during a busy moment.
-
-13. **Admin — Manage Drinks Screen** — list of drinks with their icon
+14. **Admin — Manage Drinks Screen** — list of drinks with their icon
     thumbnail and category tag; an add/edit form with name, category
     picker (pill chips), and a link into the recipe builder.
 
-14. **Admin — Manage Ingredients Screen** — list/add/edit ingredients,
+15. **Admin — Manage Ingredients Screen** — list/add/edit ingredients,
     each with side-by-side English and Romanian name fields and a unit
     field.
 
-15. **Admin — Recipe Builder Screen** — attach ingredients to a drink
+16. **Admin — Recipe Builder Screen** — attach ingredients to a drink
     with quantities, plus step-by-step instructions entered in both
     English and Romanian.
 
-16. **Profile / Settings Screen** — avatar and name, a short order-history
-    list, a language toggle (EN/RO, styled as a small pill switch), and a
-    logout action.
+17. **Profile / Settings Screen** — avatar and name, a short order-history
+    list, a link into Favorites, a language toggle (EN/RO, styled as a
+    small pill switch), and a logout action. This is the landing screen
+    after logging in from the App Landing screen with no party in play —
+    it should feel like a complete, standalone destination, not a
+    fragment of a party experience.
 
-17. **Push Notification Permission Prompt** — a friendly modal shown
+18. **Push Notification Permission Prompt** — a friendly modal shown
     right after joining a party, explaining it's just for "your drink is
     ready" alerts — not a generic system permission dialog with no
     context.
 
-18. **Empty / Error States** — styled consistently with the rest of the
+19. **Header QR/Code Modal** — not a full screen, a reusable modal overlay
+    triggered by a small icon present in **every** header across the app,
+    guest-facing (teal) and bartender-facing (coral) alike. Shows the
+    current party's QR code and backup code, styled consistently with the
+    rest of the system (rounded card, soft shadow), so it reads as "pull
+    this up from anywhere" rather than a one-time reveal. Show it as an
+    overlay on top of screen #7 (Bartender Home) and on top of screen #8
+    (Menu) as two examples of the same component in context.
+
+20. **Empty / Error States** — styled consistently with the rest of the
     system: an invalid-or-ended party code screen, a camera-permission-
     denied fallback prompting the backup code input, and a "no favorites
     yet" empty state.

@@ -1,4 +1,4 @@
-# Claude Code Implementation Guide — Tonic 112
+# Claude Code Implementation Guide — Tonic112
 
 This folder contains everything needed to implement the app autonomously,
 one Epic at a time, in Claude Code.
@@ -9,7 +9,7 @@ one Epic at a time, in Claude Code.
   product decisions, data model, and architecture. **Read this in full
   before starting Epic 01, and re-read the relevant sections before each
   subsequent Epic.**
-- `01` through `10` — Epic instruction files, meant to be fed to Claude Code
+- `01` through `14` — Epic instruction files, meant to be fed to Claude Code
   **one at a time, in order.**
 
 ## Platform scope
@@ -45,26 +45,42 @@ frontend screens that consume it, so nothing is mocked and nothing gets
 rebuilt later. Epics are ordered by dependency — each one only assumes
 what earlier Epics have already delivered.
 
-| #   | Epic                                               | Depends on                      |
-| --- | -------------------------------------------------- | ------------------------------- |
-| 01  | Foundation — monorepo, Docker Compose, CI skeleton | —                               |
-| 02  | Design System & Reusable Component Library         | 01                              |
-| 03  | Auth & Accounts                                    | 02                              |
-| 04  | Party Creation & Join Flow                         | 03                              |
-| 05  | Roles & Bartender Promotion                        | 04                              |
-| 06  | Drink & Ingredient Catalog                         | 02 (parallelizable with 03–05)  |
-| 07  | Order Lifecycle & Real-Time Claiming               | 05, 06                          |
-| 08  | Notifications                                      | 07                              |
-| 09  | Internationalization                               | 06 (touches 01–08's UI strings) |
-| 10  | Observability, Security & Deployment               | all prior                       |
+| #   | Epic                                                | Depends on                         |
+| --- | --------------------------------------------------- | ---------------------------------- |
+| 01  | Foundation — monorepo, Docker Compose, CI skeleton  | —                                  |
+| 02  | Design System & Reusable Component Library          | 01                                 |
+| 03  | Auth & Accounts                                     | 02                                 |
+| 04  | Party Creation & Join Flow                          | 03                                 |
+| 05  | Roles & Bartender Promotion                         | 04                                 |
+| 06  | Drink & Ingredient Catalog                          | 02 (parallelizable with 03–05)     |
+| 07  | Order Data Model & Claiming Logic (backend)         | 05, 06                             |
+| 08  | Order Real-Time UI & Bartender Dashboard (frontend) | 07                                 |
+| 09  | Favorites                                           | 03, 06 (parallelizable with 07–08) |
+| 10  | Notifications                                       | 07, 08                             |
+| 11  | Internationalization                                | 06 (touches 01–10's UI strings)    |
+| 12  | Observability & Analytics                           | 01–11                              |
+| 13  | Security Hardening                                  | 01 (do near the end, before 14)    |
+| 14  | Deployment & CI/CD                                  | 13, and functionally all prior     |
 
 Epic 02 (Design System) produces no end-user-facing feature on its own —
 it's a prerequisite component library that every later Epic's frontend
 work is built from. Do not skip it or treat it as optional polish.
 
-Epic 06 (catalog) has no hard dependency on 03–05 and could technically be
-built in parallel if you ever wanted to split work — but for a solo,
-sequential Claude Code workflow, following the numeric order is simplest.
+**Epic 07 is deliberately backend-only and split from Epic 08 on
+purpose.** Order claiming is the single most concurrency-sensitive piece
+of this app — Epic 07's Definition of Done requires a passing test
+proving two simultaneous claim attempts can't both succeed. Don't start
+Epic 08's dashboard UI until that test is green.
+
+Epics 06 and 09 have no hard dependency on the roles/party-join chain and
+could technically be built in parallel if you ever wanted to split work —
+but for a solo, sequential Claude Code workflow, following the numeric
+order is simplest.
+
+**Epics 12–14 were originally one combined Epic**, split into three so
+each gets a focused session: analytics, then security (genuinely new
+territory, worth its own undivided attention), then the deploy pipelines
+that assume the server is already hardened.
 
 ## Two open decisions already resolved
 

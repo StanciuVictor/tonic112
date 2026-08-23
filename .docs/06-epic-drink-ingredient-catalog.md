@@ -21,7 +21,7 @@ anything related to Expo or React Native, and use it if present.
 The Admin can manage a global, fixed drink menu — drinks, ingredients, and
 recipes — with ingredient names and recipe instructions stored as
 bilingual data (English/Romanian) from the start, even though the
-language-switching UI itself is built in Epic 09. Any participant can
+language-switching UI itself is built in Epic 11. Any participant can
 browse the menu.
 
 ## Backend Tasks
@@ -38,7 +38,7 @@ browse the menu.
     `Ingredient.name` — it's a small, developer-defined taxonomy (e.g.
     `cocktail`, `mocktail`, `shot`, `beer`, `wine`, `non_alcoholic`), so it
     translates through the same static UI-string mechanism as buttons and
-    labels (Epic 09), not through per-row bilingual data. Confirm the
+    labels (Epic 11), not through per-row bilingual data. Confirm the
     actual category list with the product owner before finalizing the
     enum — the list above is a reasonable default, not a firm spec.
   - `Ingredient`: `id, name (JSON: { en, ro }), unit`. (`currentStock` is a
@@ -77,10 +77,10 @@ browse the menu.
     generated per-drink icon when `imageUrl` is set, falling back to a
     plain category swatch when it isn't. Never assume every drink has a
     finished icon.
-  - A drink detail view showing the recipe. Since Epic 09 (i18n) hasn't
+  - A drink detail view showing the recipe. Since Epic 11 (i18n) hasn't
     been built yet, it's fine to render the `en` value of translated
     fields for now — just make sure the UI reads from the JSON structure
-    (`ingredient.name.en`) rather than assuming a flat string, so Epic 09
+    (`ingredient.name.en`) rather than assuming a flat string, so Epic 11
     only has to swap the locale key, not restructure any component.
   - Use the reusable components from the Design System Epic (Card,
     FilterChip, DrinkIcon, CategorySwatch) rather than building one-off
