@@ -2,7 +2,6 @@ export * from './button';
 export * from './card';
 export * from './category-swatch';
 export * from './drink-icon';
-export * from './filter-chip';
 export * from './header-band';
 export * from './input';
 export * from './status-pill';
