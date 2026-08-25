@@ -8,7 +8,7 @@ Section 4 (Data Model, `Drink`/`Ingredient`/`DrinkIngredient`) and Section
 9 (Internationalization).
 
 This Epic only requires Epic 01 (Foundation) and Epic 03 (Auth &
-Accounts, for the Admin-only guard) to be complete. It does not depend on
+Accounts, for the `isAdmin` guard) to be complete. It does not depend on
 Epics 04 or 05 and can be built in parallel with them if you're ever
 splitting work — for a solo sequential build, following the numeric Epic
 order is simplest.
@@ -47,11 +47,11 @@ browse the menu.
   - `DrinkIngredient`: `drinkId, ingredientId, quantity, instructions
     (JSON: { en, ro })` — recipe steps for that ingredient within that
     drink's recipe.
-- Admin-only CRUD endpoints for `Drink` and `Ingredient`
+- `isAdmin`-gated CRUD endpoints for `Drink` and `Ingredient`
   (`POST/PATCH/DELETE /admin/drinks`, `/admin/ingredients`), and for
   managing a drink's recipe (`POST/PATCH/DELETE
   /admin/drinks/:id/ingredients`).
-- Public (any authenticated participant — customer or guest) read
+- Public (any authenticated participant — registered user or guest) read
   endpoints: `GET /drinks` (menu list) and `GET /drinks/:id` (detail,
   including its full recipe with translated ingredient names and
   instructions).
@@ -61,7 +61,7 @@ browse the menu.
 
 ## Frontend Tasks
 
-- **Admin catalog management screens**: list/create/edit/delete drinks
+- **`isAdmin` catalog management screens**: list/create/edit/delete drinks
   (including assigning a `category`); list/create/edit/delete ingredients
   (with both language fields required in the form); manage a drink's
   recipe (attach ingredients with quantities and per-step instructions in
@@ -87,14 +87,15 @@ browse the menu.
     styling here.
 
 ## Definition of Done
-- Admin can fully manage the drink and ingredient catalog, including
-  multi-ingredient recipes with per-step instructions, through the app.
+- An `isAdmin` user can fully manage the drink and ingredient catalog,
+  including multi-ingredient recipes with per-step instructions, through
+  the app.
 - Attempting to save an ingredient or instruction missing either language
   is rejected with a clear validation error.
-- Any logged-in customer or anonymous guest can browse the menu and view
-  a drink's full recipe.
+- Any logged-in user or anonymous guest can browse the menu and view a
+  drink's full recipe.
 - `Drink.name` is confirmed to never go through any translation
   mechanism, anywhere in the stack.
 - Unit tests cover: bilingual validation on ingredient/instruction writes,
-  Admin-only enforcement on catalog write endpoints, and correct
+  `isAdmin` enforcement on catalog write endpoints, and correct
   recipe-to-drink relationship data on read.

@@ -45,12 +45,12 @@ logic itself.
   is a matter of adding a second dispatch path, not restructuring this
   module.
 - Add whatever push-subscription storage is needed: e.g. a `PushToken`
-  table (`id, customerId (nullable), guestId (nullable), type, token/
+  table (`id, userId (nullable), guestId (nullable), type, token/
   subscription payload, createdAt`). Include the `type` field now (even
   though only `web` is ever written in v1) so the v2 addition of `expo`
   tokens doesn't require a schema migration.
 - `POST /push-tokens` — registers a subscription for the current
-  authenticated identity (customer or guest), callable after permission is
+  authenticated identity (user or guest), callable after permission is
   granted client-side.
 - Notification payload should support a deep link back to the specific
   order/party screen (needed for the frontend's deep-link handling below).

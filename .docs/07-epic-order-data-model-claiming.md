@@ -24,10 +24,10 @@ simultaneous claim attempts on the same order can never both succeed.
 
 ## Backend Tasks
 
-- Add `Order` to the Prisma schema: `id, partyId, customerId (nullable),
-  guestId (nullable), drinkId, status, claimedByBartenderCustomerId
+- Add `Order` to the Prisma schema: `id, partyId, userId (nullable),
+  guestId (nullable), drinkId, status, claimedByBartenderUserId
   (nullable), createdAt, updatedAt, readyAt`. Enforce at the application
-  level that exactly one of `customerId`/`guestId` is set.
+  level that exactly one of `userId`/`guestId` is set.
 - `status` transitions: `pending → claimed → preparing → ready`, with
   `cancelled` reachable from `pending` or `claimed` only (never from
   `preparing` or `ready` — see Section 3 of the architecture spec).

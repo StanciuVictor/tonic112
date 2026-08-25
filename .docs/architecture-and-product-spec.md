@@ -24,50 +24,84 @@ serve continuous daily traffic.
 
 ## 2. Roles & Permissions
 
-There are three roles. Only two of them are backed by a persistent global
-account.
+There is one persistent, credentialed account type: **User**. Two
+independent boolean capability flags grant elevated access beyond the
+baseline — neither implies the other, and a user can hold either, both, or
+neither. A third, separate concept — bartender status — is not a global
+flag at all; it's tracked per party. A fourth participant type, the
+anonymous per-party guest, has no persistent account.
 
-### Admin
+### isAdmin
 
-- A single global account (the host). Not expected to scale to multiple
-  admins for the foreseeable future, but the data model should not hard-code
-  a single-admin assumption.
-- Owns the drink and ingredient catalog: creating, editing, and (in v2)
-  stocking ingredients.
-- Creates party sessions.
-- Is automatically the first bartender of any party they create.
+- Grants app-wide administrative access — expected to mainly mean owning
+  the drink/ingredient catalog (creating, editing, and, in v2, stocking
+  ingredients), with the exact boundary of "everything" finalized when the
+  relevant Epic is built.
+- Not expected to scale to multiple holders for the foreseeable future, but
+  the data model should not hard-code a single-admin assumption.
+- Fully independent of `canCreateParty` — an admin doesn't automatically get
+  it, and a `canCreateParty` holder doesn't automatically get admin access.
+  Not every bartender should have the keys to everything.
 
-### Bartender
+### canCreateParty
 
-- **Not a global account type.** It is a permission scoped to a single
-  party, recorded as a relationship between a registered customer account
-  and a specific party.
-- The party creator (the Admin) is bartender #1 by default.
-- Any active bartender (or the Admin) can promote another participant to
-  bartender **for that party only**, at any point during the event.
-- **Only participants who joined with a registered account can be promoted.**
-  Anonymous/temporary-name guests can never become bartenders.
-- Bartender status must be checked against the database at request time, not
+- Grants the ability to create a new Party session — the action that
+  generates the QR code and human-readable backup code, and stands up
+  Bartender Home's live-queue state (Section 7).
+- The user who creates a party automatically becomes that party's first
+  bartender (see below) as a direct, mechanical consequence of the create
+  action — not because of `isAdmin`, and not because of `canCreateParty`
+  itself. The flag only gates whether the create-party action is allowed to
+  run at all; it has no bearing on bartender status once it has.
+- Granted the same way `isAdmin` is: out-of-band (a direct database edit in
+  v1). There is no self-service way for a newly registered account to
+  acquire either flag — see Section 5.
+
+### Bartender (per party)
+
+- **Not a global capability.** Recorded as a relationship between a
+  registered `User` and a specific `Party`, via the `PartyMember` join
+  table's `role` column (`customer` | `bartender` — see Section 4).
+- The party's creator starts out with `role: bartender` in their own
+  `PartyMember` row for that party (see `canCreateParty` above).
+- Any active bartender (or the party's creator) can promote another
+  participant's `PartyMember` row from `customer` to `bartender`, **for
+  that party only**, at any point during the event.
+- **Only participants with a registered `User` row can be promoted.**
+  Anonymous/temporary-name guests (`PartyGuest`) have no `User` row and no
+  `PartyMember` row, so they can never become bartenders.
+- Must be checked against the `PartyMember` table at request time, not
   trusted from a static JWT claim — promotion can happen after a token was
-  already issued, so the source of truth is the party-bartender relationship
-  table, not the token payload.
-- Bartenders can claim, update, and cancel orders. Bartenders cannot edit the
-  drink/ingredient catalog — that stays an Admin-only action.
+  already issued, so the source of truth is that table, not the token
+  payload. (`isAdmin`/`canCreateParty`, by contrast, are stable enough to be
+  trusted directly from the JWT — see Section 5.)
+- Bartenders can claim, update, and cancel orders. Bartender status alone
+  does not grant catalog-editing access — that's gated by `isAdmin`.
 
-### Customer
+### Customer (per party, default)
 
-Two paths, chosen at join time, both valid:
-
-- **Registered customer**: has an email + password account. Gets persistent
-  order history and can mark drinks as favorites. Accounts persist across
+- The default `PartyMember.role` for any registered `User` who joins a
+  party without (yet) being promoted. Every registered `User` can act as a
+  customer in any party they join — this isn't a separate capability to
+  grant, just the starting state.
+- Gets persistent order history and can mark drinks as favorites, both
+  tracked against the `User`, not per-party. Accounts persist across
   separate parties.
-- **Anonymous / temporary guest**: picks a display name scoped to a single
-  party. Nothing about their identity is stored beyond that party. They
-  cannot be promoted to bartender and have no order history or favorites.
 
-There is **no role selector** anywhere in the join flow. Every participant
-joins the same way (see Section 3). Bartender status is only ever granted
-after joining, by someone already trusted — never self-declared at the door.
+### Anonymous / temporary guest
+
+- Picks a display name scoped to a single party (`PartyGuest`). Nothing
+  about their identity is stored beyond that party. Cannot be promoted to
+  bartender and has no order history or favorites.
+
+There is **no role selector** in the party-join flow (see Section 3) — a
+guest scanning a QR code is never offered a bartender option, even if
+promotion happens to be pending or possible for them; if they already hold
+`role: bartender` for that party, the app detects it automatically after
+they authenticate and routes them to the bartender view, rather than asking.
+Bartender status is only ever granted after joining, by someone already
+trusted — never self-declared at the door. A separate, unlinked entry point
+exists for logging in as someone who holds `canCreateParty` (Section 3).
 
 ---
 
@@ -77,23 +111,30 @@ The app has two entry points, not one:
 
 - **The App Landing screen** — the actual root of the app, with no party
   in play. Two options only: **"Join a Party"** and **"Log In"**. This is
-  what makes a `Customer` account genuinely usable on its own (checking
-  order history or favorites without a party open), rather than only ever
-  existing as a side effect of joining one. Admin login is deliberately
-  **not** offered here — it's reached via its own separate, unlinked
-  route, since there's only ever one Admin and no reason to surface that
-  path in guest-facing UI.
+  what makes a registered `User` account genuinely usable on its own
+  (checking order history or favorites without a party open), rather than
+  only ever existing as a side effect of joining one. The `canCreateParty`
+  login entry point is deliberately **not** offered here — it's reached via
+  its own separate, unlinked route, since in practice very few accounts
+  hold that flag and there's no reason to surface that path in guest-facing
+  UI.
 - **A party-specific join link** (the QR/URL) — skips straight past the
   landing screen since the party is already known.
 
+> The exact landing-page layout (button labels, and how the `canCreateParty`
+> entry point and the customer/guest join path are presented) is still being
+> finalized as part of Epic 04 — treat the two-entry-point structure above as
+> settled, not the pixel-level details.
+
 The journey:
 
-1. **Admin creates a party.** Logging in as Admin lands on **Bartender
-   Home**, which starts in an empty state (no active party yet) with a
-   "Create Party" action. Creating one generates a short human-readable
-   backup code and a QR code encoding a join URL, and Bartender Home's
-   empty state becomes its live-queue state (Section 7). The QR/code
-   isn't shown once and lost — see the header icon below.
+1. **A user with `canCreateParty` creates a party.** Logging in through that
+   entry point lands on **Bartender Home**, which starts in an empty state
+   (no active party yet) with a "Create Party" action. Creating one
+   generates a short human-readable backup code and a QR code encoding a
+   join URL, and Bartender Home's empty state becomes its live-queue state
+   (Section 7). The QR/code isn't shown once and lost — see the header icon
+   below.
 2. **Guests join** one of two ways:
    - Scan the QR with their phone's system camera. Since v1 ships as a web
      app only (see Section 6), the QR simply encodes a plain URL — no
@@ -141,15 +182,24 @@ Core entities and their relationships. Field lists are representative, not
 exhaustive — implementation may add operational fields (timestamps, soft
 deletes, etc.) as needed.
 
-- **AdminAccount** — `id, email, passwordHash, name, createdAt`
-- **Customer** — `id, email, passwordHash, name, createdAt`
+- **User** — `id, email, passwordHash, name, isAdmin, canCreateParty, createdAt`
   - Has many `Order`
   - Has many `Favorite` (join to `Drink`)
-  - Has many `PartyBartender` (parties where this customer is a bartender)
-- **Party** — `id, code, qrToken, status (active|ended), createdByAdminId, createdAt, startedAt, endedAt`
-- **PartyBartender** — `id, partyId, customerId, promotedAt` — join table;
-  `customerId` must reference a registered `Customer`, never an anonymous
-  guest.
+  - Has many `PartyMember` (parties this user has joined, and their role in
+    each)
+  - Has many `Party` (parties this user created, via `createdByUserId`)
+- **Party** — `id, code, qrToken, status (active|ended), createdByUserId, createdAt, startedAt, endedAt`
+  - `createdByUserId` must reference a `User` with `canCreateParty: true` at
+    the time of creation — enforced at the application layer, not the
+    schema.
+- **PartyMember** — `id, partyId, userId, role (customer|bartender, default
+  customer), joinedAt, promotedAt (nullable)` — join table between `User`
+  and `Party`, one row per `(partyId, userId)` pair; `userId` always
+  references a registered `User`, never an anonymous guest. Replaces the
+  single-purpose `PartyBartender` table from earlier drafts — every party
+  participant with a registered account gets a row here, not just the ones
+  who are bartenders, and promotion is just that row's `role` flipping from
+  `customer` to `bartender`.
 - **PartyGuest** — `id, partyId, tempName, createdAt` — ephemeral, scoped to
   one party, not linked to any persistent identity.
 - **Drink** — `id, name, description, category (fixed enum), imageUrl (optional), active`
@@ -174,27 +224,40 @@ deletes, etc.) as needed.
 - **DrinkIngredient** (recipe line) — `drinkId, ingredientId, quantity, instructions (JSON: { en, ro })`
   - Recipe steps/instructions are translated the same way as ingredient
     names — stored as data, not static strings.
-- **Order** — `id, partyId, customerId (nullable), guestId (nullable), drinkId, status, claimedByBartenderCustomerId (nullable), createdAt, updatedAt, readyAt`
-  - Exactly one of `customerId` / `guestId` is set per order.
+- **Order** — `id, partyId, userId (nullable), guestId (nullable), drinkId, status, claimedByBartenderUserId (nullable), createdAt, updatedAt, readyAt`
+  - Exactly one of `userId` / `guestId` is set per order.
   - `status ∈ { pending, claimed, preparing, ready, cancelled }`
-- **Favorite** — `customerId, drinkId, createdAt` — registered customers
-  only.
+- **Favorite** — `userId, drinkId, createdAt` — registered users only,
+  anonymous guests can't favorite.
 
 ---
 
 ## 5. Authentication
 
-- **Admin**: email + password → JWT with an admin claim.
-- **Customer**: email + password → JWT with a customer claim and
-  `customerId`. No email verification and no OAuth/magic-link flow in v1
-  (see Section 14 for future login methods).
+- **User**: one email + password login for every registered account — there
+  is no separate admin-login mechanism at the API level. A successful login
+  (or registration) issues a JWT carrying `sub` (the user id), `isAdmin`,
+  and `canCreateParty`. Both flags are trusted directly from the token
+  rather than re-checked against the database on every request: they're
+  granted out-of-band and don't change within the lifetime of a session the
+  way bartender status can (see below). No email verification and no
+  OAuth/magic-link flow in v1 (see Section 14 for future login methods).
+  - Registration always creates a baseline account (`isAdmin: false`,
+    `canCreateParty: false`) — neither flag can be set via any request
+    body, ever. In v1, granting either is a manual, out-of-band action (a
+    direct database edit); an admin-facing UI for managing other users'
+    flags is a v2 item (Section 16).
+  - The frontend still presents two distinct entry points into this one
+    login mechanism — a public one for customers/guests, and a separate,
+    unlinked one for logging in as someone who holds `canCreateParty` — but
+    both submit to the same backend login endpoint.
 - **Anonymous guest**: no credentials. On joining a party, the server issues
   a short-lived JWT scoped to that specific party and guest name, expiring
   when the party ends (or after a fixed TTL).
-- **Bartender authorization**: not encoded as a durable JWT claim. Every
-  bartender-gated request is checked against the `PartyBartender` table at
-  request time, since promotion can happen mid-session after a customer's
-  token was already issued.
+- **Bartender authorization**: not encoded as a durable JWT claim, unlike
+  `isAdmin`/`canCreateParty`. Every bartender-gated request is checked
+  against the `PartyMember` table at request time, since promotion can
+  happen mid-session after a user's token was already issued.
 
 ---
 
@@ -400,7 +463,8 @@ pull request.
 ## 16. v2 Roadmap (not to design against now, but not to block either)
 
 - **Two-phase party lifecycle**: a `draft` status on `Party` that blocks
-  guest joins until the Admin explicitly starts it (a "Start Party" step),
+  guest joins until its `canCreateParty` creator explicitly starts it (a
+  "Start Party" step),
   giving a prep window to get the QR ready/displayed before anyone can
   actually join. v1 deliberately skips this — creation is immediately
   active — since the added state isn't worth the complexity for a casual
