@@ -41,6 +41,12 @@ Thumbs.db
 # Docker - personal local overrides, never shared/committed
 docker-compose.override.yml
 
+# Implementation docs/product spec - not for the public repo
+.docs/
+
+# Contains personal notes about the developer - not for the public repo
+CLAUDE.md
+
 .nx/cache
 .nx/workspace-data
 .nx/migrate-runs
