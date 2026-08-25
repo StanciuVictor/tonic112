@@ -11,3 +11,18 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// isAdmin and canCreateParty are independent capability flags, not a role
+// hierarchy — neither implies the other (see architecture-and-product-spec.md
+// Section 2). Both are granted out-of-band (direct DB edit) in v1; there is
+// no self-elevation endpoint by design.
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  passwordHash   String
+  name           String
+  isAdmin        Boolean  @default(false)
+  canCreateParty Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
