@@ -37,7 +37,8 @@
     "tslib": "*",
     "@nx/detox": "*",
     "@nx/rollup": "*",
-    "expo-router": "*"
+    "expo-router": "*",
+    "expo-secure-store": "*"
   },
   "devDependencies": {}
 }
