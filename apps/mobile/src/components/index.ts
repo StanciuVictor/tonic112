@@ -1,3 +1,4 @@
+export * from './auth-form';
 export * from './button';
 export * from './card';
 export * from './category-swatch';

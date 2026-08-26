@@ -1,4 +1,7 @@
-import { Fredoka_500Medium, Fredoka_600SemiBold } from '@expo-google-fonts/fredoka';
+import {
+  Fredoka_500Medium,
+  Fredoka_600SemiBold,
+} from '@expo-google-fonts/fredoka';
 import {
   Poppins_400Regular,
   Poppins_500Medium,
@@ -10,6 +13,7 @@ import { Stack } from 'expo-router/stack';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { useAuthStore } from '../src/store/auth-store';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,14 +28,22 @@ export default function RootLayout() {
     Poppins_600SemiBold,
     Poppins_700Bold,
   });
+  const authStatus = useAuthStore((s) => s.status);
+  const restoreSession = useAuthStore((s) => s.restoreSession);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    restoreSession();
+  }, [restoreSession]);
+
+  const ready = (fontsLoaded || fontError) && authStatus !== 'idle';
+
+  useEffect(() => {
+    if (ready) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [ready]);
 
-  if (!fontsLoaded && !fontError) {
+  if (!ready) {
     return null;
   }
 
