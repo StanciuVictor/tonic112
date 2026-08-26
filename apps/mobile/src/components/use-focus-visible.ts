@@ -16,16 +16,18 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
   document.addEventListener(
     'keydown',
     (e) => {
-      if (e.key === 'Tab') lastInputWasKeyboard = true;
+      if (e.key === 'Tab') {
+        lastInputWasKeyboard = true;
+      }
     },
-    true
+    true,
   );
   document.addEventListener(
     'pointerdown',
     () => {
       lastInputWasKeyboard = false;
     },
-    true
+    true,
   );
 }
 
@@ -33,7 +35,9 @@ export function useFocusVisible() {
   const [focusVisible, setFocusVisible] = useState(false);
 
   const onFocus = useCallback(() => {
-    if (Platform.OS === 'web') setFocusVisible(lastInputWasKeyboard);
+    if (Platform.OS === 'web') {
+      setFocusVisible(lastInputWasKeyboard);
+    }
   }, []);
   const onBlur = useCallback(() => setFocusVisible(false), []);
 

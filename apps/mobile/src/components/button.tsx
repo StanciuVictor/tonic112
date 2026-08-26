@@ -64,7 +64,9 @@ export interface ButtonProps {
 const HIT_SLOP_COMPACT_TEXT = { top: 6, bottom: 6, left: 6, right: 6 };
 
 function iconHitSlop(size: ButtonSize) {
-  return size === 'compact' ? { top: 7, bottom: 7, left: 7, right: 7 } : undefined;
+  return size === 'compact'
+    ? { top: 7, bottom: 7, left: 7, right: 7 }
+    : undefined;
 }
 
 interface StateFlags {
@@ -84,66 +86,117 @@ interface ResolvedColors {
 }
 
 /** Every button color, for every variant and state, read from `buttonTokens`. */
-function resolveColors(variant: ButtonVariant, flags: StateFlags): ResolvedColors {
+function resolveColors(
+  variant: ButtonVariant,
+  flags: StateFlags,
+): ResolvedColors {
   const { pressed, hovered, disabled, selected, band, tone, size } = flags;
   switch (variant) {
     case 'primary': {
       const t = buttonTokens.primary;
-      if (disabled) return { bg: t.bgDisabled, fg: t.fgDisabled };
-      if (pressed) return { bg: t.bgActive, fg: t.fg };
-      if (hovered) return { bg: t.bgHover, fg: t.fg };
+      if (disabled) {
+        return { bg: t.bgDisabled, fg: t.fgDisabled };
+      }
+      if (pressed) {
+        return { bg: t.bgActive, fg: t.fg };
+      }
+      if (hovered) {
+        return { bg: t.bgHover, fg: t.fg };
+      }
       return { bg: t.bg, fg: t.fg };
     }
     case 'secondary': {
       const t = buttonTokens.secondary;
-      if (disabled) return { bg: 'transparent', border: t.borderDisabled, fg: t.fgDisabled };
-      if (pressed) return { bg: t.fillActive, border: t.borderActive, fg: t.fgActive };
-      if (hovered) return { bg: t.fillHover, border: t.border, fg: t.fgHover };
+      if (disabled) {
+        return {
+          bg: 'transparent',
+          border: t.borderDisabled,
+          fg: t.fgDisabled,
+        };
+      }
+      if (pressed) {
+        return { bg: t.fillActive, border: t.borderActive, fg: t.fgActive };
+      }
+      if (hovered) {
+        return { bg: t.fillHover, border: t.border, fg: t.fgHover };
+      }
       return { bg: 'transparent', border: t.border, fg: t.fg };
     }
     case 'onHeader': {
       const t = buttonTokens.onHeader[band];
-      if (disabled) return { bg: t.bgDisabled, fg: t.fgDisabled };
-      if (pressed) return { bg: t.bgActive, fg: t.fgActive };
-      if (hovered) return { bg: t.bgHover, fg: t.fg };
+      if (disabled) {
+        return { bg: t.bgDisabled, fg: t.fgDisabled };
+      }
+      if (pressed) {
+        return { bg: t.bgActive, fg: t.fgActive };
+      }
+      if (hovered) {
+        return { bg: t.bgHover, fg: t.fg };
+      }
       return { bg: t.bg, fg: t.fg };
     }
     case 'pill': {
       if (selected) {
         const t = buttonTokens.pill.selected;
-        if (pressed) return { bg: t.bgActive, fg: t.fg };
-        if (hovered) return { bg: t.bgHover, fg: t.fg };
+        if (pressed) {
+          return { bg: t.bgActive, fg: t.fg };
+        }
+        if (hovered) {
+          return { bg: t.bgHover, fg: t.fg };
+        }
         return { bg: t.bg, fg: t.fg };
       }
       const t = buttonTokens.pill.unselected;
       // Pressed previews the *selected* look — bg jumps straight to the
       // primary-hover coral, label flips white — so selection feels instant.
-      if (pressed) return { bg: t.bgActive, fg: t.fgActive };
-      if (hovered) return { bg: t.bgHover, fg: t.fgHover };
+      if (pressed) {
+        return { bg: t.bgActive, fg: t.fgActive };
+      }
+      if (hovered) {
+        return { bg: t.bgHover, fg: t.fgHover };
+      }
       return { bg: t.bg, fg: t.fg };
     }
     case 'queue': {
       if (tone === 'cancel') {
         const t = buttonTokens.queue;
-        if (disabled) return { bg: t.ghostBg, fg: buttonTokens.secondary.fgDisabled };
-        if (pressed) return { bg: t.ghostBgActive, fg: t.ghostFg };
-        if (hovered) return { bg: t.ghostBgHover, fg: t.ghostFg };
+        if (disabled) {
+          return { bg: t.ghostBg, fg: buttonTokens.secondary.fgDisabled };
+        }
+        if (pressed) {
+          return { bg: t.ghostBgActive, fg: t.ghostFg };
+        }
+        if (hovered) {
+          return { bg: t.ghostBgHover, fg: t.ghostFg };
+        }
         return { bg: t.ghostBg, fg: t.ghostFg };
       }
       // 'action' tone reuses the primary variant's colors at compact size.
       const t = buttonTokens.primary;
-      if (disabled) return { bg: t.bgDisabled, fg: t.fgDisabled };
-      if (pressed) return { bg: t.bgActive, fg: t.fg };
-      if (hovered) return { bg: t.bgHover, fg: t.fg };
+      if (disabled) {
+        return { bg: t.bgDisabled, fg: t.fgDisabled };
+      }
+      if (pressed) {
+        return { bg: t.bgActive, fg: t.fg };
+      }
+      if (hovered) {
+        return { bg: t.bgHover, fg: t.fg };
+      }
       return { bg: t.bg, fg: t.fg };
     }
     case 'icon': {
       if (size === 'compact') {
         // Quantity +/-: filled coral square, reuses the primary tokens.
         const t = buttonTokens.primary;
-        if (disabled) return { bg: t.bgDisabled, fg: t.fgDisabled };
-        if (pressed) return { bg: t.bgActive, fg: t.fg };
-        if (hovered) return { bg: t.bgHover, fg: t.fg };
+        if (disabled) {
+          return { bg: t.bgDisabled, fg: t.fgDisabled };
+        }
+        if (pressed) {
+          return { bg: t.bgActive, fg: t.fg };
+        }
+        if (hovered) {
+          return { bg: t.bgHover, fg: t.fg };
+        }
         return { bg: t.bg, fg: t.fg };
       }
       // Default icon button (back chevron / favorite heart): no fill, hover
@@ -155,22 +208,34 @@ function resolveColors(variant: ButtonVariant, flags: StateFlags): ResolvedColor
         : selected
           ? t.heartFilled
           : t.heartStroke;
-      if (hovered && !disabled) return { bg: t.chevronHoverBg, fg };
+      if (hovered && !disabled) {
+        return { bg: t.chevronHoverBg, fg };
+      }
       return { bg: 'transparent', fg };
     }
     case 'link': {
       const t = buttonTokens.link;
-      if (disabled) return { fg: t.fgDisabled };
-      if (pressed) return { fg: t.fgActive };
-      if (hovered) return { fg: t.fgHover };
+      if (disabled) {
+        return { fg: t.fgDisabled };
+      }
+      if (pressed) {
+        return { fg: t.fgActive };
+      }
+      if (hovered) {
+        return { fg: t.fgHover };
+      }
       return { fg: t.fg };
     }
   }
 }
 
 function pressScaleFor(variant: ButtonVariant, size: ButtonSize) {
-  if (variant === 'link') return undefined; // too small to read a transform
-  if (variant === 'icon' && size === 'compact') return 0.94; // quantity +/-
+  if (variant === 'link') {
+    return undefined;
+  } // too small to read a transform
+  if (variant === 'icon' && size === 'compact') {
+    return 0.94;
+  } // quantity +/-
   return 0.97;
 }
 
@@ -195,8 +260,13 @@ function labelStyleFor(variant: ButtonVariant, selected: boolean) {
   }
 }
 
-function shapeKeyFor(variant: ButtonVariant, size: ButtonSize): keyof typeof shapeStyles {
-  if (variant === 'icon') return size === 'compact' ? 'iconCompact' : 'iconDefault';
+function shapeKeyFor(
+  variant: ButtonVariant,
+  size: ButtonSize,
+): keyof typeof shapeStyles {
+  if (variant === 'icon') {
+    return size === 'compact' ? 'iconCompact' : 'iconDefault';
+  }
   return variant;
 }
 
@@ -206,7 +276,11 @@ function shapeKeyFor(variant: ButtonVariant, size: ButtonSize): keyof typeof sha
  * Gated to `Platform.OS === 'web'` — never sent to native, matching the
  * existing `Platform.select` pattern used for `cardShadow` in tokens.ts.
  */
-function webInteractionStyle(onBand: boolean, focusVisible: boolean, disabled: boolean): ViewStyle {
+function webInteractionStyle(
+  onBand: boolean,
+  focusVisible: boolean,
+  disabled: boolean,
+): ViewStyle {
   return {
     cursor: disabled ? 'not-allowed' : 'pointer',
     transitionProperty: ['background-color', 'transform'],
@@ -215,7 +289,9 @@ function webInteractionStyle(onBand: boolean, focusVisible: boolean, disabled: b
     outlineStyle: focusVisible ? 'solid' : 'none',
     outlineWidth: 2,
     outlineOffset: 2,
-    outlineColor: onBand ? buttonTokens.focusRingOnBand : buttonTokens.focusRing,
+    outlineColor: onBand
+      ? buttonTokens.focusRingOnBand
+      : buttonTokens.focusRing,
   } as ViewStyle;
 }
 
@@ -242,7 +318,10 @@ export function Button({
   const isInert = disabled || (loading && variant === 'primary');
   const isIcon = variant === 'icon';
   const isTextCompactHit =
-    variant === 'onHeader' || variant === 'pill' || variant === 'queue' || variant === 'link';
+    variant === 'onHeader' ||
+    variant === 'pill' ||
+    variant === 'queue' ||
+    variant === 'link';
   const onBand = variant === 'onHeader';
 
   const handleLayout = (e: LayoutChangeEvent) => {
@@ -267,7 +346,13 @@ export function Button({
         disabled: isInert,
         ...(variant === 'pill' ? { selected } : null),
       }}
-      hitSlop={isIcon ? iconHitSlop(size) : isTextCompactHit ? HIT_SLOP_COMPACT_TEXT : undefined}
+      hitSlop={
+        isIcon
+          ? iconHitSlop(size)
+          : isTextCompactHit
+            ? HIT_SLOP_COMPACT_TEXT
+            : undefined
+      }
       style={({ pressed }) => {
         const flags: StateFlags = {
           pressed: (forceState === 'pressed' || pressed) && !isInert,
@@ -291,8 +376,12 @@ export function Button({
             borderWidth: variant === 'secondary' ? 2 : 0,
           },
           flags.pressed && scale ? { transform: [{ scale }] } : null,
-          Platform.OS === 'web' ? webInteractionStyle(onBand, focusVisible, isInert) : null,
-          variant === 'primary' && loading && measuredWidth ? { width: measuredWidth } : null,
+          Platform.OS === 'web'
+            ? webInteractionStyle(onBand, focusVisible, isInert)
+            : null,
+          variant === 'primary' && loading && measuredWidth
+            ? { width: measuredWidth }
+            : null,
           style,
         ];
       }}
