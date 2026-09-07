@@ -18,6 +18,7 @@ services:
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      WEB_BASE_URL: ${WEB_BASE_URL}
     restart: always
 
   nginx:
