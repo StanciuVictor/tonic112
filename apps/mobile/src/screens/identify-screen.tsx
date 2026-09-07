@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '../components/button';
 import { HeaderBand } from '../components/header-band';
 import { Input } from '../components/input';
+import { PartyInviteModal } from '../components/party-invite-modal';
 import { Toast } from '../components/toast';
 import { useAuthStore } from '../store/auth-store';
 import { usePartyStore } from '../store/party-store';
@@ -30,6 +31,7 @@ export default function IdentifyScreen() {
   const [guestName, setGuestName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>(Status.loading);
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,7 +93,14 @@ export default function IdentifyScreen() {
 
   return (
     <View style={styles.container}>
-      <HeaderBand accent="teal">
+      <HeaderBand
+        accent="teal"
+        onQrPress={
+          status === Status.joined && session
+            ? () => setModalVisible(true)
+            : undefined
+        }
+      >
         <Text style={styles.title}>Join a Party</Text>
       </HeaderBand>
       <View style={styles.content}>
@@ -150,6 +159,13 @@ export default function IdentifyScreen() {
           </View>
         )}
       </View>
+      {status === Status.joined && session && (
+        <PartyInviteModal
+          visible={modalVisible}
+          party={session.party}
+          onClose={() => setModalVisible(false)}
+        />
+      )}
     </View>
   );
 }

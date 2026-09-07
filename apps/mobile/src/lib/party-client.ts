@@ -21,6 +21,17 @@ async function parseErrorMessage(response: Response): Promise<string> {
   return `Request failed with status ${response.status}`;
 }
 
+export async function createParty(token: string): Promise<PartyDto> {
+  const response = await fetch(`${API_URL}/parties`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    throw new Error(await parseErrorMessage(response));
+  }
+  return response.json();
+}
+
 export async function fetchPartyByCode(code: string): Promise<PartyDto> {
   const response = await fetch(`${API_URL}/parties/${code}`);
   if (!response.ok) {

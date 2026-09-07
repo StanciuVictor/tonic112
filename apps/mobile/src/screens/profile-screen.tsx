@@ -28,6 +28,14 @@ export default function ProfileScreen() {
         >
           Join a Party
         </Button>
+        {user?.canCreateParty && (
+          <Button
+            onPress={() => router.push('/bartender-home')}
+            testID="profile-start-party-button"
+          >
+            Start a Party
+          </Button>
+        )}
         <Button
           variant="secondary"
           onPress={handleLogout}
