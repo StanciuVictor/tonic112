@@ -69,3 +69,5 @@ npm-debug.*
 web-build/
 cache/
 
+#Excalidraw schemas
+*.excalidraw
