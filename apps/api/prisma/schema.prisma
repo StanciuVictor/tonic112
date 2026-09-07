@@ -26,4 +26,60 @@ model User {
   canCreateParty Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  createdParties   Party[]
+  partyMemberships PartyMember[]
+}
+
+enum PartyStatus {
+  active
+  ended
+}
+
+enum PartyMemberRole {
+  customer
+  bartender
+}
+
+// code is the short, human-readable backup code (typed manually); qrToken is
+// a separate, longer, unguessable value embedded in the QR's join URL. Both
+// resolve the same party via GET /parties/:code, which matches either field —
+// see .docs/04-epic-party-join-flow.md for why the endpoint stays singular.
+model Party {
+  id              String      @id @default(cuid())
+  code            String      @unique
+  qrToken         String      @unique
+  status          PartyStatus @default(active)
+  createdByUserId String
+  createdBy       User        @relation(fields: [createdByUserId], references: [id])
+  createdAt       DateTime    @default(now())
+  startedAt       DateTime    @default(now())
+  endedAt         DateTime?
+
+  members PartyMember[]
+  guests  PartyGuest[]
+}
+
+// One row per (partyId, userId) pair — every registered participant, not
+// just bartenders. Promotion (Epic 05) is just this row's role flipping.
+model PartyMember {
+  id         String          @id @default(cuid())
+  partyId    String
+  party      Party           @relation(fields: [partyId], references: [id])
+  userId     String
+  user       User            @relation(fields: [userId], references: [id])
+  role       PartyMemberRole @default(customer)
+  joinedAt   DateTime        @default(now())
+  promotedAt DateTime?
+
+  @@unique([partyId, userId])
+}
+
+// Fully ephemeral — never linked to a User, never gets a PartyMember row.
+model PartyGuest {
+  id         String   @id @default(cuid())
+  partyId    String
+  party      Party    @relation(fields: [partyId], references: [id])
+  guestName  String
+  createdAt  DateTime @default(now())
 }
