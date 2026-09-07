@@ -34,7 +34,8 @@ services:
       NODE_ENV: development
       JWT_SECRET: tonic112_dev_jwt_secret_change_in_production
       JWT_EXPIRES_IN: 30d
-      WEB_BASE_URL: http://localhost:19000
+      GUEST_JWT_EXPIRES_IN: 12h
+      WEB_BASE_URL: http://localhost:8081
     depends_on:
       postgres:
         condition: service_healthy
