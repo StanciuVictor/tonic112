@@ -14,6 +14,7 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useAuthStore } from '../src/store/auth-store';
+import { usePartyStore } from '../src/store/party-store';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -30,10 +31,12 @@ export default function RootLayout() {
   });
   const authStatus = useAuthStore((s) => s.status);
   const restoreSession = useAuthStore((s) => s.restoreSession);
+  const restorePartySession = usePartyStore((s) => s.restoreSession);
 
   useEffect(() => {
     restoreSession();
-  }, [restoreSession]);
+    restorePartySession();
+  }, [restoreSession, restorePartySession]);
 
   const ready = (fontsLoaded || fontError) && authStatus !== 'idle';
 

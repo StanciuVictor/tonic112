@@ -23,6 +23,12 @@ export default function ProfileScreen() {
         <Text style={styles.name}>{user?.name}</Text>
         <Text style={styles.email}>{user?.email}</Text>
         <Button
+          onPress={() => router.push('/join')}
+          testID="profile-join-party-button"
+        >
+          Join a Party
+        </Button>
+        <Button
           variant="secondary"
           onPress={handleLogout}
           testID="logout-button"

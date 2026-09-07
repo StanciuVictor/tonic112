@@ -3,6 +3,7 @@
 module.exports = {
   displayName: 'mobile',
   preset: 'jest-expo',
+  resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   moduleNameMapper: {

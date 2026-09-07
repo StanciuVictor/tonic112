@@ -109,7 +109,23 @@
     "@swc/core@1.16.1": true
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
+    "apps/mobile/**/*.{js,jsx,ts,tsx}": [
+      "eslint --fix --config apps/mobile/eslint.config.mjs",
+      "prettier --write"
+    ],
+    "apps/api/**/*.{js,ts}": [
+      "eslint --fix --config apps/api/eslint.config.mjs",
+      "prettier --write"
+    ],
+    "libs/shared-types/**/*.{js,ts}": [
+      "eslint --fix --config libs/shared-types/eslint.config.mjs",
+      "prettier --write"
+    ],
+    "./*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    ".agents/**/*.js": [
       "eslint --fix",
       "prettier --write"
     ],

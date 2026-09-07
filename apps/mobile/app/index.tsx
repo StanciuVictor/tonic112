@@ -1,1 +1,1 @@
-export { default } from '../src/screens/health-screen';
+export { default } from '../src/screens/landing-screen';
