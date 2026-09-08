@@ -26,8 +26,13 @@ describe('PartyService', () => {
   let prisma: {
     $transaction: jest.Mock;
     party: { findFirst: jest.Mock; update: jest.Mock };
-    partyGuest: { create: jest.Mock };
-    partyMember: { upsert: jest.Mock; findUnique: jest.Mock };
+    partyGuest: { create: jest.Mock; findMany: jest.Mock };
+    partyMember: {
+      upsert: jest.Mock;
+      findUnique: jest.Mock;
+      update: jest.Mock;
+      findMany: jest.Mock;
+    };
   };
   let jwtService: { sign: jest.Mock };
   let tx: {
@@ -56,8 +61,13 @@ describe('PartyService', () => {
     prisma = {
       $transaction: jest.fn((cb) => cb(tx)),
       party: { findFirst: jest.fn(), update: jest.fn() },
-      partyGuest: { create: jest.fn() },
-      partyMember: { upsert: jest.fn(), findUnique: jest.fn() },
+      partyGuest: { create: jest.fn(), findMany: jest.fn() },
+      partyMember: {
+        upsert: jest.fn(),
+        findUnique: jest.fn(),
+        update: jest.fn(),
+        findMany: jest.fn(),
+      },
     };
     jwtService = { sign: jest.fn().mockReturnValue('signed-guest-jwt') };
 
@@ -348,6 +358,145 @@ describe('PartyService', () => {
       prisma.party.findFirst.mockResolvedValue(null);
 
       await expect(service.end('NOPE12', 'user-1')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('promote', () => {
+    const dbMember = {
+      id: 'member-2',
+      partyId: dbParty.id,
+      userId: 'user-2',
+      role: PartyMemberRole.customer,
+      joinedAt: new Date('2026-01-01T00:00:00Z'),
+      promotedAt: null,
+    };
+
+    it('flips a customer PartyMember row to bartender', async () => {
+      prisma.party.findFirst.mockResolvedValue(dbParty);
+      prisma.partyMember.findUnique.mockResolvedValue(dbMember);
+      prisma.partyMember.update.mockResolvedValue({
+        ...dbMember,
+        role: PartyMemberRole.bartender,
+        promotedAt: new Date('2026-01-01T06:00:00Z'),
+      });
+
+      const result = await service.promote(dbParty.code, 'user-2');
+
+      expect(prisma.partyMember.update).toHaveBeenCalledWith({
+        where: { id: dbMember.id },
+        data: { role: PartyMemberRole.bartender, promotedAt: expect.any(Date) },
+      });
+      expect(result.role).toBe(PartyMemberRole.bartender);
+      expect(result.promotedAt).not.toBeNull();
+    });
+
+    it('is a no-op when the target is already a bartender', async () => {
+      prisma.party.findFirst.mockResolvedValue(dbParty);
+      prisma.partyMember.findUnique.mockResolvedValue({
+        ...dbMember,
+        role: PartyMemberRole.bartender,
+      });
+
+      const result = await service.promote(dbParty.code, 'user-2');
+
+      expect(prisma.partyMember.update).not.toHaveBeenCalled();
+      expect(result.role).toBe(PartyMemberRole.bartender);
+    });
+
+    it('throws NotFoundException for a user with no PartyMember row for this party', async () => {
+      prisma.party.findFirst.mockResolvedValue(dbParty);
+      prisma.partyMember.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.promote(dbParty.code, 'never-joined'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(prisma.partyMember.update).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException for an unknown code', async () => {
+      prisma.party.findFirst.mockResolvedValue(null);
+
+      await expect(service.promote('NOPE12', 'user-2')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('getMyMembership', () => {
+    it('returns the current user membership for the party', async () => {
+      prisma.party.findFirst.mockResolvedValue(dbParty);
+      prisma.partyMember.findUnique.mockResolvedValue({
+        id: 'member-1',
+        partyId: dbParty.id,
+        userId: 'user-1',
+        role: PartyMemberRole.bartender,
+        joinedAt: new Date('2026-01-01T00:00:00Z'),
+        promotedAt: null,
+      });
+
+      const result = await service.getMyMembership(dbParty.code, 'user-1');
+
+      expect(result.role).toBe(PartyMemberRole.bartender);
+    });
+
+    it('throws NotFoundException when the user has not joined the party', async () => {
+      prisma.party.findFirst.mockResolvedValue(dbParty);
+      prisma.partyMember.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.getMyMembership(dbParty.code, 'stranger'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('getParticipants', () => {
+    it('combines PartyMember and PartyGuest rows into one participant list', async () => {
+      prisma.party.findFirst.mockResolvedValue(dbParty);
+      prisma.partyMember.findMany.mockResolvedValue([
+        {
+          id: 'member-1',
+          userId: 'user-1',
+          user: { name: 'Alex' },
+          role: PartyMemberRole.bartender,
+          joinedAt: new Date('2026-01-01T00:00:00Z'),
+          promotedAt: null,
+        },
+      ]);
+      prisma.partyGuest.findMany.mockResolvedValue([
+        {
+          id: 'guest-1',
+          guestName: 'Sam',
+          createdAt: new Date('2026-01-01T00:05:00Z'),
+        },
+      ]);
+
+      const result = await service.getParticipants(dbParty.code);
+
+      expect(result).toEqual([
+        {
+          kind: 'member',
+          id: 'member-1',
+          userId: 'user-1',
+          name: 'Alex',
+          role: PartyMemberRole.bartender,
+          joinedAt: '2026-01-01T00:00:00.000Z',
+          promotedAt: null,
+        },
+        {
+          kind: 'guest',
+          id: 'guest-1',
+          guestName: 'Sam',
+          joinedAt: '2026-01-01T00:05:00.000Z',
+        },
+      ]);
+    });
+
+    it('throws NotFoundException for an unknown code', async () => {
+      prisma.party.findFirst.mockResolvedValue(null);
+
+      await expect(service.getParticipants('NOPE12')).rejects.toBeInstanceOf(
         NotFoundException,
       );
     });

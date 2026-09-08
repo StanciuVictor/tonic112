@@ -8,6 +8,10 @@ import { JwtService } from '@nestjs/jwt';
 import type { SignOptions } from 'jsonwebtoken';
 import {
   GuestJoinResponse,
+  GuestParticipantDto,
+  MemberParticipantDto,
+  ParticipantDto,
+  ParticipantKind,
   PartyDto,
   PartyMemberDto,
 } from '@tonic112/shared-types';
@@ -140,6 +144,72 @@ export class PartyService {
       data: { status: PartyStatus.ended, endedAt: new Date() },
     });
     return this.toDto(ended);
+  }
+
+  async promote(code: string, targetUserId: string): Promise<PartyMemberDto> {
+    const party = await this.findPartyByCode(code, { requireActive: false });
+
+    const membership = await this.prisma.partyMember.findUnique({
+      where: { partyId_userId: { partyId: party.id, userId: targetUserId } },
+    });
+    if (!membership) {
+      throw new NotFoundException('This user has not joined the party');
+    }
+    if (membership.role === PartyMemberRole.bartender) {
+      return this.toMemberDto(membership);
+    }
+
+    const promoted = await this.prisma.partyMember.update({
+      where: { id: membership.id },
+      data: { role: PartyMemberRole.bartender, promotedAt: new Date() },
+    });
+    return this.toMemberDto(promoted);
+  }
+
+  async getMyMembership(code: string, userId: string): Promise<PartyMemberDto> {
+    const party = await this.findPartyByCode(code, { requireActive: false });
+
+    const membership = await this.prisma.partyMember.findUnique({
+      where: { partyId_userId: { partyId: party.id, userId } },
+    });
+    if (!membership) {
+      throw new NotFoundException('You have not joined this party');
+    }
+    return this.toMemberDto(membership);
+  }
+
+  async getParticipants(code: string): Promise<ParticipantDto[]> {
+    const party = await this.findPartyByCode(code, { requireActive: false });
+
+    const [members, guests] = await Promise.all([
+      this.prisma.partyMember.findMany({
+        where: { partyId: party.id },
+        include: { user: { select: { name: true } } },
+        orderBy: { joinedAt: 'asc' },
+      }),
+      this.prisma.partyGuest.findMany({
+        where: { partyId: party.id },
+        orderBy: { createdAt: 'asc' },
+      }),
+    ]);
+
+    const memberParticipants: MemberParticipantDto[] = members.map((m) => ({
+      kind: ParticipantKind.member,
+      id: m.id,
+      userId: m.userId,
+      name: m.user.name,
+      role: m.role,
+      joinedAt: m.joinedAt.toISOString(),
+      promotedAt: m.promotedAt?.toISOString() ?? null,
+    }));
+    const guestParticipants: GuestParticipantDto[] = guests.map((g) => ({
+      kind: ParticipantKind.guest,
+      id: g.id,
+      guestName: g.guestName,
+      joinedAt: g.createdAt.toISOString(),
+    }));
+
+    return [...memberParticipants, ...guestParticipants];
   }
 
   private async findPartyByCode(

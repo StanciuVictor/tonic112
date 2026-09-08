@@ -35,6 +35,7 @@ interface PartyState {
   resolveCode: (code: string) => Promise<PartyDto>;
   joinAsGuest: (guestName: string) => Promise<void>;
   joinAsUser: () => Promise<PartyMemberDto>;
+  refreshMyMembership: () => Promise<void>;
   restoreSession: () => Promise<void>;
   clear: () => Promise<void>;
 }
@@ -82,6 +83,24 @@ export const usePartyStore = create<PartyState>((set, get) => ({
     await storage.setItem(SESSION_KEY, JSON.stringify(session));
     set({ session });
     return member;
+  },
+
+  refreshMyMembership: async () => {
+    const session = get().session;
+    if (!session || session.kind !== SessionKind.member) {
+      return;
+    }
+    const token = useAuthStore.getState().token;
+    if (!token) {
+      return;
+    }
+    const member = await partyClient.fetchMyMembership(
+      session.party.code,
+      token,
+    );
+    const refreshed: PartySession = { ...session, member };
+    await storage.setItem(SESSION_KEY, JSON.stringify(refreshed));
+    set({ session: refreshed });
   },
 
   restoreSession: async () => {

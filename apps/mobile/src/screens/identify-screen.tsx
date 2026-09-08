@@ -1,11 +1,13 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { PartyMemberRole } from '@tonic112/shared-types';
 import { Button } from '../components/button';
 import { HeaderBand } from '../components/header-band';
 import { Input } from '../components/input';
 import { PartyInviteModal } from '../components/party-invite-modal';
 import { Toast } from '../components/toast';
+import * as partyClient from '../lib/party-client';
 import { useAuthStore } from '../store/auth-store';
 import { usePartyStore } from '../store/party-store';
 import { colors, fonts, fontSizes, spacing } from '../theme/tokens';
@@ -23,15 +25,44 @@ type Status = (typeof Status)[keyof typeof Status];
 export default function IdentifyScreen() {
   const { code } = useLocalSearchParams<{ code?: string }>();
   const authStatus = useAuthStore((s) => s.status);
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
   const party = usePartyStore((s) => s.party);
   const session = usePartyStore((s) => s.session);
   const resolveCode = usePartyStore((s) => s.resolveCode);
   const joinAsUser = usePartyStore((s) => s.joinAsUser);
   const joinAsGuest = usePartyStore((s) => s.joinAsGuest);
+  const refreshMyMembership = usePartyStore((s) => s.refreshMyMembership);
   const [guestName, setGuestName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>(Status.loading);
   const [modalVisible, setModalVisible] = useState(false);
+  const [becomingBartender, setBecomingBartender] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (status === Status.joined && session?.kind === 'member') {
+        refreshMyMembership();
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [status, session?.kind]),
+  );
+
+  const handleBecomeBartender = async () => {
+    if (!code || !token || !user) {
+      return;
+    }
+    setBecomingBartender(true);
+    setError(null);
+    try {
+      await partyClient.promoteMember(code, user.id, token);
+      await refreshMyMembership();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.');
+    } finally {
+      setBecomingBartender(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -151,11 +182,37 @@ export default function IdentifyScreen() {
           </>
         )}
         {status === Status.joined && session && (
-          <View>
+          <View style={styles.joinedActions}>
             <Text style={styles.joinedTitle}>You're in!</Text>
             <Text style={styles.joinedSubtitle}>
               Party code: {session.party.code}
             </Text>
+            {session.kind === 'member' &&
+              session.member.role === PartyMemberRole.bartender && (
+                <Button
+                  variant="secondary"
+                  onPress={() =>
+                    router.push(`/participants?code=${session.party.code}`)
+                  }
+                  testID="identify-view-participants-button"
+                >
+                  View Participants
+                </Button>
+              )}
+            {session.kind === 'member' &&
+              session.member.role === PartyMemberRole.customer &&
+              user?.canCreateParty && (
+                <Button
+                  variant="secondary"
+                  onPress={handleBecomeBartender}
+                  disabled={becomingBartender}
+                  testID="identify-become-bartender-button"
+                >
+                  {becomingBartender
+                    ? 'Becoming a bartender…'
+                    : 'Become a bartender for this party'}
+                </Button>
+              )}
           </View>
         )}
       </View>
@@ -193,5 +250,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.body,
     fontSize: fontSizes.md,
     color: colors.text.muted,
+  },
+  joinedActions: {
+    gap: spacing.md,
   },
 });

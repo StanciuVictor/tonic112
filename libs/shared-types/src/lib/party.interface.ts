@@ -41,3 +41,29 @@ export interface GuestJoinResponse {
   accessToken: string;
   guest: GuestIdentity;
 }
+
+export const ParticipantKind = {
+  member: 'member',
+  guest: 'guest',
+} as const;
+export type ParticipantKind =
+  (typeof ParticipantKind)[keyof typeof ParticipantKind];
+
+export interface MemberParticipantDto {
+  kind: typeof ParticipantKind.member;
+  id: string;
+  userId: string;
+  name: string;
+  role: PartyMemberRole;
+  joinedAt: string;
+  promotedAt: string | null;
+}
+
+export interface GuestParticipantDto {
+  kind: typeof ParticipantKind.guest;
+  id: string;
+  guestName: string;
+  joinedAt: string;
+}
+
+export type ParticipantDto = MemberParticipantDto | GuestParticipantDto;

@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { PartyDto } from '@tonic112/shared-types';
@@ -60,9 +61,18 @@ export default function BartenderHomeScreen() {
           </>
         )}
         {party && (
-          <Card style={styles.qrCard}>
-            <PartyQrCode party={party} />
-          </Card>
+          <>
+            <Card style={styles.qrCard}>
+              <PartyQrCode party={party} />
+            </Card>
+            <Button
+              variant="secondary"
+              onPress={() => router.push(`/participants?code=${party.code}`)}
+              testID="view-participants-button"
+            >
+              View Participants
+            </Button>
+          </>
         )}
       </View>
       {party && (

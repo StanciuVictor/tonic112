@@ -1,5 +1,6 @@
 import {
   GuestJoinResponse,
+  ParticipantDto,
   PartyDto,
   PartyMemberDto,
 } from '@tonic112/shared-types';
@@ -63,6 +64,50 @@ export async function joinAsUser(
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
+  if (!response.ok) {
+    throw new Error(await parseErrorMessage(response));
+  }
+  return response.json();
+}
+
+export async function fetchMyMembership(
+  code: string,
+  token: string,
+): Promise<PartyMemberDto> {
+  const response = await fetch(`${API_URL}/parties/${code}/members/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    throw new Error(await parseErrorMessage(response));
+  }
+  return response.json();
+}
+
+export async function fetchParticipants(
+  code: string,
+  token: string,
+): Promise<ParticipantDto[]> {
+  const response = await fetch(`${API_URL}/parties/${code}/participants`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    throw new Error(await parseErrorMessage(response));
+  }
+  return response.json();
+}
+
+export async function promoteMember(
+  code: string,
+  userId: string,
+  token: string,
+): Promise<PartyMemberDto> {
+  const response = await fetch(
+    `${API_URL}/parties/${code}/members/${userId}/promote`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
   if (!response.ok) {
     throw new Error(await parseErrorMessage(response));
   }

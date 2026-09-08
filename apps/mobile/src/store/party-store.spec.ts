@@ -102,6 +102,54 @@ describe('usePartyStore', () => {
     expect(partyClient.joinAsUser).not.toHaveBeenCalled();
   });
 
+  it('refreshes the current member session with the latest role', async () => {
+    usePartyStore.setState({
+      party: mockParty,
+      session: {
+        kind: SessionKind.member,
+        party: mockParty,
+        member: mockMember,
+      },
+    });
+    useAuthStore.setState({ token: 'user-jwt' });
+    const promotedMember: PartyMemberDto = {
+      ...mockMember,
+      role: PartyMemberRole.bartender,
+      promotedAt: '2026-01-01T06:00:00.000Z',
+    };
+    (partyClient.fetchMyMembership as jest.Mock).mockResolvedValue(
+      promotedMember,
+    );
+
+    await usePartyStore.getState().refreshMyMembership();
+
+    expect(partyClient.fetchMyMembership).toHaveBeenCalledWith(
+      'ABC234',
+      'user-jwt',
+    );
+    expect(usePartyStore.getState().session).toEqual({
+      kind: SessionKind.member,
+      party: mockParty,
+      member: promotedMember,
+    });
+  });
+
+  it('does nothing when refreshing membership with a guest session', async () => {
+    usePartyStore.setState({
+      party: mockParty,
+      session: {
+        kind: SessionKind.guest,
+        party: mockParty,
+        guest: { id: 'guest-1', partyId: mockParty.id, guestName: 'Alex' },
+        accessToken: 'guest-jwt',
+      },
+    });
+
+    await usePartyStore.getState().refreshMyMembership();
+
+    expect(partyClient.fetchMyMembership).not.toHaveBeenCalled();
+  });
+
   it('restores a persisted session from storage', async () => {
     const session = {
       kind: SessionKind.guest,
