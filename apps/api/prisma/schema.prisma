@@ -136,9 +136,9 @@ model Ingredient {
 model DrinkIngredient {
   id           String     @id @default(cuid())
   drinkId      String
-  drink        Drink      @relation(fields: [drinkId], references: [id])
+  drink        Drink      @relation(fields: [drinkId], references: [id], onDelete: Cascade)
   ingredientId String
-  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
   quantity     Float
   instructions Json
   createdAt    DateTime   @default(now())

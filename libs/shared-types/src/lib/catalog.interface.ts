@@ -61,7 +61,7 @@ export interface UpdateDrinkRequest {
   name?: string;
   description?: string;
   category?: DrinkCategory;
-  imageUrl?: string | null;
+  imageUrl?: string;
   active?: boolean;
 }
 

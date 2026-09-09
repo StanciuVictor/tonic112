@@ -1,6 +1,4 @@
 {
   "jestrunner.configPath": "jest.config.ts",
-  "cSpell.words": [
-    "Pressable"
-  ]
+  "cSpell.words": ["cuid", "fkey", "mocktail", "pkey", "Pressable"]
 }
