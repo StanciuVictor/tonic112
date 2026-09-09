@@ -83,3 +83,65 @@ model PartyGuest {
   guestName  String
   createdAt  DateTime @default(now())
 }
+
+// Small, fixed, developer-defined taxonomy (see architecture-and-product-spec.md
+// Section 4) — translates through the static UI-string mechanism (Epic 11),
+// not per-row bilingual data like Ingredient.name.
+enum DrinkCategory {
+  cocktail
+  mocktail
+  shot
+  beer
+  wine
+  champagne
+  spirit
+  liqueur
+  non_alcoholic
+  hot_drink
+}
+
+// name is never translated, in any mechanism — cocktail names stay as-is
+// regardless of UI language. price is reserved but unused in v1 (no billing
+// yet — see architecture-and-product-spec.md Section 12/15).
+model Drink {
+  id          String        @id @default(cuid())
+  name        String
+  description String
+  category    DrinkCategory
+  imageUrl    String?
+  active      Boolean       @default(true)
+  price       Decimal?      @db.Decimal(10, 2)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  recipe DrinkIngredient[]
+}
+
+// name is a translated JSON object ({ en, ro }), not a static-file lookup
+// key, since ingredients are managed dynamically through the admin panel.
+// currentStock is a v2 field — do not add it now (Section 16).
+model Ingredient {
+  id        String   @id @default(cuid())
+  name      Json
+  unit      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usedIn DrinkIngredient[]
+}
+
+// One recipe line: how much of one ingredient a drink needs, plus the
+// per-step instructions for that ingredient within that drink's recipe —
+// also translated JSON ({ en, ro }), same rationale as Ingredient.name.
+model DrinkIngredient {
+  id           String     @id @default(cuid())
+  drinkId      String
+  drink        Drink      @relation(fields: [drinkId], references: [id])
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  quantity     Float
+  instructions Json
+  createdAt    DateTime   @default(now())
+
+  @@unique([drinkId, ingredientId])
+}
