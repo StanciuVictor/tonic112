@@ -1,18 +1,26 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { Button } from '../components/button';
 import { HeaderBand } from '../components/header-band';
 import { useAuthStore } from '../store/auth-store';
+import { SessionKind, usePartyStore } from '../store/party-store';
 import { colors, fonts, fontSizes, spacing } from '../theme/tokens';
 
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const session = usePartyStore((s) => s.session);
+  const clearPartySession = usePartyStore((s) => s.clear);
 
   const handleLogout = async () => {
     await logout();
+    await clearPartySession();
     router.replace('/login');
   };
+
+  if (session?.kind === SessionKind.member) {
+    return <Redirect href={`/join/identify?code=${session.party.code}`} />;
+  }
 
   return (
     <View style={styles.container}>

@@ -150,6 +150,158 @@ describe('usePartyStore', () => {
     expect(partyClient.fetchMyMembership).not.toHaveBeenCalled();
   });
 
+  it('adopts a member session directly via setMemberSession', async () => {
+    await usePartyStore.getState().setMemberSession(mockParty, mockMember);
+
+    expect(storage.setItem).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+    );
+    expect(usePartyStore.getState()).toMatchObject({
+      party: mockParty,
+      session: {
+        kind: SessionKind.member,
+        party: mockParty,
+        member: mockMember,
+      },
+    });
+  });
+
+  it('restores the active party membership from the server on restoreActiveParty', async () => {
+    useAuthStore.setState({ token: 'user-jwt' });
+    (partyClient.fetchMyActiveParty as jest.Mock).mockResolvedValue({
+      party: mockParty,
+      member: mockMember,
+    });
+
+    await usePartyStore.getState().restoreActiveParty();
+
+    expect(partyClient.fetchMyActiveParty).toHaveBeenCalledWith('user-jwt');
+    expect(usePartyStore.getState()).toMatchObject({
+      party: mockParty,
+      session: {
+        kind: SessionKind.member,
+        party: mockParty,
+        member: mockMember,
+      },
+    });
+  });
+
+  it('does nothing when restoreActiveParty has no auth token', async () => {
+    await usePartyStore.getState().restoreActiveParty();
+
+    expect(partyClient.fetchMyActiveParty).not.toHaveBeenCalled();
+  });
+
+  it('clears a stale cached member session when the server has no active party', async () => {
+    useAuthStore.setState({ token: 'user-jwt' });
+    usePartyStore.setState({
+      party: mockParty,
+      session: {
+        kind: SessionKind.member,
+        party: mockParty,
+        member: mockMember,
+      },
+    });
+    (partyClient.fetchMyActiveParty as jest.Mock).mockRejectedValue(
+      new Error('Not found'),
+    );
+
+    await usePartyStore.getState().restoreActiveParty();
+
+    expect(storage.deleteItem).toHaveBeenCalled();
+    expect(usePartyStore.getState()).toMatchObject({
+      party: null,
+      session: null,
+    });
+  });
+
+  it('demotes the current user to customer', async () => {
+    usePartyStore.setState({
+      party: mockParty,
+      session: {
+        kind: SessionKind.member,
+        party: mockParty,
+        member: { ...mockMember, role: PartyMemberRole.bartender },
+      },
+    });
+    useAuthStore.setState({ token: 'user-jwt' });
+    (partyClient.demoteSelf as jest.Mock).mockResolvedValue(mockMember);
+
+    const result = await usePartyStore.getState().demoteSelf();
+
+    expect(partyClient.demoteSelf).toHaveBeenCalledWith('ABC234', 'user-jwt');
+    expect(result).toEqual(mockMember);
+    expect(usePartyStore.getState().session).toEqual({
+      kind: SessionKind.member,
+      party: mockParty,
+      member: mockMember,
+    });
+  });
+
+  it('throws when demoting self without a party session', async () => {
+    await expect(usePartyStore.getState().demoteSelf()).rejects.toThrow(
+      'Not a member of a party',
+    );
+    expect(partyClient.demoteSelf).not.toHaveBeenCalled();
+  });
+
+  it('leaves the current party and clears the session', async () => {
+    usePartyStore.setState({
+      party: mockParty,
+      session: {
+        kind: SessionKind.member,
+        party: mockParty,
+        member: mockMember,
+      },
+    });
+    useAuthStore.setState({ token: 'user-jwt' });
+    (partyClient.leaveParty as jest.Mock).mockResolvedValue(undefined);
+
+    await usePartyStore.getState().leave();
+
+    expect(partyClient.leaveParty).toHaveBeenCalledWith('ABC234', 'user-jwt');
+    expect(usePartyStore.getState()).toMatchObject({
+      party: null,
+      session: null,
+    });
+  });
+
+  it('throws when leaving without a party session', async () => {
+    await expect(usePartyStore.getState().leave()).rejects.toThrow(
+      'Not a member of a party',
+    );
+    expect(partyClient.leaveParty).not.toHaveBeenCalled();
+  });
+
+  it('ends the current party and clears the session', async () => {
+    usePartyStore.setState({
+      party: mockParty,
+      session: {
+        kind: SessionKind.member,
+        party: mockParty,
+        member: mockMember,
+      },
+    });
+    useAuthStore.setState({ token: 'user-jwt' });
+    (partyClient.endParty as jest.Mock).mockResolvedValue(mockParty);
+
+    await usePartyStore.getState().endParty();
+
+    expect(partyClient.endParty).toHaveBeenCalledWith('ABC234', 'user-jwt');
+    expect(usePartyStore.getState()).toMatchObject({
+      party: null,
+      session: null,
+    });
+  });
+
+  it('throws when ending a party without a party session', async () => {
+    await expect(usePartyStore.getState().endParty()).rejects.toThrow(
+      'Not a member of a party',
+    );
+    expect(partyClient.endParty).not.toHaveBeenCalled();
+  });
+
   it('restores a persisted session from storage', async () => {
     const session = {
       kind: SessionKind.guest,

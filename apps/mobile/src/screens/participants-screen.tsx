@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import {
@@ -10,6 +10,7 @@ import { Button } from '../components/button';
 import { Card } from '../components/card';
 import { HeaderBand } from '../components/header-band';
 import { Toast } from '../components/toast';
+import { goHome } from '../lib/navigation';
 import * as partyClient from '../lib/party-client';
 import { useAuthStore } from '../store/auth-store';
 import { colors, fonts, fontSizes, spacing } from '../theme/tokens';
@@ -31,7 +32,7 @@ export default function ParticipantsScreen() {
 
   useEffect(() => {
     if (!code || !token) {
-      router.replace('/');
+      goHome();
       return;
     }
     let cancelled = false;

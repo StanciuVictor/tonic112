@@ -1,6 +1,7 @@
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import {
+  ActivePartyMembershipDto,
   ParticipantDto,
   PartyDto,
   PartyMemberDto,
@@ -26,6 +27,9 @@ describe('PartyController', () => {
     getParticipants: jest.Mock;
     getMyMembership: jest.Mock;
     promote: jest.Mock;
+    getMyActiveParty: jest.Mock;
+    demoteSelf: jest.Mock;
+    leave: jest.Mock;
   };
   let reflector: Reflector;
 
@@ -39,6 +43,9 @@ describe('PartyController', () => {
       getParticipants: jest.fn(),
       getMyMembership: jest.fn(),
       promote: jest.fn(),
+      getMyActiveParty: jest.fn(),
+      demoteSelf: jest.fn(),
+      leave: jest.fn(),
     };
 
     const module = await Test.createTestingModule({
@@ -221,5 +228,71 @@ describe('PartyController', () => {
 
     await expect(controller.promote('ABC234', 'user-2')).resolves.toBe(member);
     expect(partyService.promote).toHaveBeenCalledWith('ABC234', 'user-2');
+  });
+
+  it('returns the current user active party membership', async () => {
+    const payload: JwtPayload = {
+      sub: 'user-1',
+      isAdmin: false,
+      canCreateParty: true,
+    };
+    const active: ActivePartyMembershipDto = {
+      party: {
+        id: 'party-1',
+        code: 'ABC234',
+        status: PartyStatus.active,
+        createdByUserId: 'user-1',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        startedAt: '2026-01-01T00:00:00.000Z',
+        endedAt: null,
+        joinUrl: 'https://example.test/join?code=qr-token',
+      },
+      member: {
+        id: 'member-1',
+        partyId: 'party-1',
+        userId: 'user-1',
+        role: PartyMemberRole.bartender,
+        joinedAt: '2026-01-01T00:00:00.000Z',
+        promotedAt: null,
+      },
+    };
+    partyService.getMyActiveParty.mockResolvedValue(active);
+
+    await expect(controller.getMyActiveParty(payload)).resolves.toBe(active);
+    expect(partyService.getMyActiveParty).toHaveBeenCalledWith('user-1');
+  });
+
+  it('demotes the current user to customer', async () => {
+    const payload: JwtPayload = {
+      sub: 'user-2',
+      isAdmin: false,
+      canCreateParty: false,
+    };
+    const member: PartyMemberDto = {
+      id: 'member-2',
+      partyId: 'party-1',
+      userId: 'user-2',
+      role: PartyMemberRole.customer,
+      joinedAt: '2026-01-01T00:00:00.000Z',
+      promotedAt: null,
+    };
+    partyService.demoteSelf.mockResolvedValue(member);
+
+    await expect(controller.demoteSelf('ABC234', payload)).resolves.toBe(
+      member,
+    );
+    expect(partyService.demoteSelf).toHaveBeenCalledWith('ABC234', 'user-2');
+  });
+
+  it('removes the current user from a party', async () => {
+    const payload: JwtPayload = {
+      sub: 'user-2',
+      isAdmin: false,
+      canCreateParty: false,
+    };
+    partyService.leave.mockResolvedValue(undefined);
+
+    await expect(controller.leave('ABC234', payload)).resolves.toBeUndefined();
+    expect(partyService.leave).toHaveBeenCalledWith('ABC234', 'user-2');
   });
 });

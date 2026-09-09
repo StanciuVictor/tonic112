@@ -8,16 +8,22 @@ import { HeaderBand } from '../components/header-band';
 import { PartyInviteModal } from '../components/party-invite-modal';
 import { PartyQrCode } from '../components/party-qr-code';
 import { Toast } from '../components/toast';
+import { goHome } from '../lib/navigation';
 import * as partyClient from '../lib/party-client';
 import { useAuthStore } from '../store/auth-store';
+import { usePartyStore } from '../store/party-store';
 import { colors, fonts, fontSizes, spacing } from '../theme/tokens';
 
 export default function BartenderHomeScreen() {
   const token = useAuthStore((s) => s.token);
+  const setMemberSession = usePartyStore((s) => s.setMemberSession);
+  const endParty = usePartyStore((s) => s.endParty);
   const [party, setParty] = useState<PartyDto | null>(null);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
+  const [ending, setEnding] = useState(false);
 
   const handleCreate = async () => {
     if (!token) {
@@ -27,11 +33,26 @@ export default function BartenderHomeScreen() {
     setError(null);
     try {
       const created = await partyClient.createParty(token);
+      const member = await partyClient.fetchMyMembership(created.code, token);
+      await setMemberSession(created, member);
       setParty(created);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleEndParty = async () => {
+    setEnding(true);
+    setError(null);
+    try {
+      await endParty();
+      goHome();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.');
+      setEnding(false);
+      setConfirmingEnd(false);
     }
   };
 
@@ -65,6 +86,7 @@ export default function BartenderHomeScreen() {
             <Card style={styles.qrCard}>
               <PartyQrCode party={party} />
             </Card>
+            {error && <Toast variant="error" message={error} />}
             <Button
               variant="secondary"
               onPress={() => router.push(`/participants?code=${party.code}`)}
@@ -72,6 +94,37 @@ export default function BartenderHomeScreen() {
             >
               View Participants
             </Button>
+            {!confirmingEnd && (
+              <Button
+                variant="secondary"
+                onPress={() => setConfirmingEnd(true)}
+                testID="end-party-button"
+              >
+                End Party
+              </Button>
+            )}
+            {confirmingEnd && (
+              <View style={styles.confirmEnd}>
+                <Text style={styles.emptyText}>
+                  This ends the party for everyone and can't be undone.
+                </Text>
+                <Button
+                  onPress={handleEndParty}
+                  disabled={ending}
+                  testID="confirm-end-party-button"
+                >
+                  {ending ? 'Ending…' : 'Yes, end the party'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onPress={() => setConfirmingEnd(false)}
+                  disabled={ending}
+                  testID="cancel-end-party-button"
+                >
+                  Cancel
+                </Button>
+              </View>
+            )}
           </>
         )}
       </View>
@@ -107,5 +160,8 @@ const styles = StyleSheet.create({
   },
   qrCard: {
     alignItems: 'center',
+  },
+  confirmEnd: {
+    gap: spacing.sm,
   },
 });

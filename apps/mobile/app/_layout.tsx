@@ -32,11 +32,18 @@ export default function RootLayout() {
   const authStatus = useAuthStore((s) => s.status);
   const restoreSession = useAuthStore((s) => s.restoreSession);
   const restorePartySession = usePartyStore((s) => s.restoreSession);
+  const restoreActiveParty = usePartyStore((s) => s.restoreActiveParty);
 
   useEffect(() => {
-    restoreSession();
     restorePartySession();
+    restoreSession();
   }, [restoreSession, restorePartySession]);
+
+  useEffect(() => {
+    if (authStatus === 'authenticated') {
+      restoreActiveParty();
+    }
+  }, [authStatus, restoreActiveParty]);
 
   const ready = (fontsLoaded || fontError) && authStatus !== 'idle';
 

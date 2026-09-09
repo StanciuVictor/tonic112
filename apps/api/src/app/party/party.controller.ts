@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import {
+  ActivePartyMembershipDto,
   GuestJoinResponse,
   ParticipantDto,
   PartyDto,
@@ -23,6 +24,13 @@ export class PartyController {
   @RequireFlags('canCreateParty')
   create(@CurrentUser() user: JwtPayload): Promise<PartyDto> {
     return this.partyService.create(user.sub);
+  }
+
+  @Get('me/active')
+  getMyActiveParty(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<ActivePartyMembershipDto> {
+    return this.partyService.getMyActiveParty(user.sub);
   }
 
   @Public()
@@ -77,5 +85,21 @@ export class PartyController {
     @Param('userId') userId: string,
   ): Promise<PartyMemberDto> {
     return this.partyService.promote(code, userId);
+  }
+
+  @Post(':code/members/me/demote')
+  demoteSelf(
+    @Param('code') code: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<PartyMemberDto> {
+    return this.partyService.demoteSelf(code, user.sub);
+  }
+
+  @Post(':code/leave')
+  leave(
+    @Param('code') code: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<void> {
+    return this.partyService.leave(code, user.sub);
   }
 }

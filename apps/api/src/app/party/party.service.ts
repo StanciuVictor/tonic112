@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import type { SignOptions } from 'jsonwebtoken';
 import {
+  ActivePartyMembershipDto,
   GuestJoinResponse,
   GuestParticipantDto,
   MemberParticipantDto,
@@ -45,6 +46,8 @@ export class PartyService {
   ) {}
 
   async create(creatorUserId: string): Promise<PartyDto> {
+    await this.assertNoActiveMembershipElsewhere(creatorUserId);
+
     for (let attempt = 1; attempt <= MAX_CODE_GENERATION_ATTEMPTS; attempt++) {
       try {
         const party = await this.prisma.$transaction(async (tx) => {
@@ -112,6 +115,7 @@ export class PartyService {
 
   async joinAsUser(code: string, userId: string): Promise<PartyMemberDto> {
     const party = await this.findPartyByCode(code);
+    await this.assertNoActiveMembershipElsewhere(userId, party.id);
 
     const member = await this.prisma.partyMember.upsert({
       where: { partyId_userId: { partyId: party.id, userId } },
@@ -139,9 +143,14 @@ export class PartyService {
       throw new ConflictException('Party has already ended');
     }
 
-    const ended = await this.prisma.party.update({
-      where: { id: party.id },
-      data: { status: PartyStatus.ended, endedAt: new Date() },
+    const ended = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.party.update({
+        where: { id: party.id },
+        data: { status: PartyStatus.ended, endedAt: new Date() },
+      });
+      await tx.partyMember.deleteMany({ where: { partyId: party.id } });
+      await tx.partyGuest.deleteMany({ where: { partyId: party.id } });
+      return updated;
     });
     return this.toDto(ended);
   }
@@ -164,6 +173,63 @@ export class PartyService {
       data: { role: PartyMemberRole.bartender, promotedAt: new Date() },
     });
     return this.toMemberDto(promoted);
+  }
+
+  async leave(code: string, userId: string): Promise<void> {
+    const party = await this.findPartyByCode(code, { requireActive: false });
+
+    const membership = await this.prisma.partyMember.findUnique({
+      where: { partyId_userId: { partyId: party.id, userId } },
+    });
+    if (!membership) {
+      throw new NotFoundException('You are not a member of this party');
+    }
+    if (membership.role === PartyMemberRole.bartender) {
+      await this.assertNotSoleBartender(
+        party.id,
+        'You are the only bartender for this party — end it instead of leaving',
+      );
+    }
+
+    await this.prisma.partyMember.delete({ where: { id: membership.id } });
+  }
+
+  async demoteSelf(code: string, userId: string): Promise<PartyMemberDto> {
+    const party = await this.findPartyByCode(code, { requireActive: false });
+
+    const membership = await this.prisma.partyMember.findUnique({
+      where: { partyId_userId: { partyId: party.id, userId } },
+    });
+    if (!membership) {
+      throw new NotFoundException('You are not a member of this party');
+    }
+    if (membership.role === PartyMemberRole.customer) {
+      return this.toMemberDto(membership);
+    }
+    await this.assertNotSoleBartender(
+      party.id,
+      'You are the only bartender for this party — promote someone else before stepping down',
+    );
+
+    const demoted = await this.prisma.partyMember.update({
+      where: { id: membership.id },
+      data: { role: PartyMemberRole.customer, promotedAt: null },
+    });
+    return this.toMemberDto(demoted);
+  }
+
+  async getMyActiveParty(userId: string): Promise<ActivePartyMembershipDto> {
+    const membership = await this.prisma.partyMember.findFirst({
+      where: { userId, party: { status: PartyStatus.active } },
+      include: { party: true },
+    });
+    if (!membership) {
+      throw new NotFoundException('No active party membership');
+    }
+    return {
+      party: this.toDto(membership.party),
+      member: this.toMemberDto(membership),
+    };
   }
 
   async getMyMembership(code: string, userId: string): Promise<PartyMemberDto> {
@@ -210,6 +276,36 @@ export class PartyService {
     }));
 
     return [...memberParticipants, ...guestParticipants];
+  }
+
+  private async assertNoActiveMembershipElsewhere(
+    userId: string,
+    excludePartyId?: string,
+  ): Promise<void> {
+    const existing = await this.prisma.partyMember.findFirst({
+      where: {
+        userId,
+        party: { status: PartyStatus.active },
+        ...(excludePartyId ? { NOT: { partyId: excludePartyId } } : {}),
+      },
+    });
+    if (existing) {
+      throw new ConflictException(
+        'You are already an active member of another party. Leave or end it before joining or creating a new one.',
+      );
+    }
+  }
+
+  private async assertNotSoleBartender(
+    partyId: string,
+    message: string,
+  ): Promise<void> {
+    const bartenderCount = await this.prisma.partyMember.count({
+      where: { partyId, role: PartyMemberRole.bartender },
+    });
+    if (bartenderCount <= 1) {
+      throw new ConflictException(message);
+    }
   }
 
   private async findPartyByCode(

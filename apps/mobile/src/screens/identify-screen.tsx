@@ -7,9 +7,10 @@ import { HeaderBand } from '../components/header-band';
 import { Input } from '../components/input';
 import { PartyInviteModal } from '../components/party-invite-modal';
 import { Toast } from '../components/toast';
+import { goHome } from '../lib/navigation';
 import * as partyClient from '../lib/party-client';
 import { useAuthStore } from '../store/auth-store';
-import { usePartyStore } from '../store/party-store';
+import { SessionKind, usePartyStore } from '../store/party-store';
 import { colors, fonts, fontSizes, spacing } from '../theme/tokens';
 
 const Status = {
@@ -33,15 +34,22 @@ export default function IdentifyScreen() {
   const joinAsUser = usePartyStore((s) => s.joinAsUser);
   const joinAsGuest = usePartyStore((s) => s.joinAsGuest);
   const refreshMyMembership = usePartyStore((s) => s.refreshMyMembership);
+  const demoteSelf = usePartyStore((s) => s.demoteSelf);
+  const leaveParty = usePartyStore((s) => s.leave);
+  const endParty = usePartyStore((s) => s.endParty);
   const [guestName, setGuestName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>(Status.loading);
   const [modalVisible, setModalVisible] = useState(false);
   const [becomingBartender, setBecomingBartender] = useState(false);
+  const [droppingRole, setDroppingRole] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
+  const [ending, setEnding] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      if (status === Status.joined && session?.kind === 'member') {
+      if (status === Status.joined && session?.kind === SessionKind.member) {
         refreshMyMembership();
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,6 +69,43 @@ export default function IdentifyScreen() {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
     } finally {
       setBecomingBartender(false);
+    }
+  };
+
+  const handleDropRole = async () => {
+    setDroppingRole(true);
+    setError(null);
+    try {
+      await demoteSelf();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.');
+    } finally {
+      setDroppingRole(false);
+    }
+  };
+
+  const handleLeave = async () => {
+    setLeaving(true);
+    setError(null);
+    try {
+      await leaveParty();
+      goHome();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.');
+      setLeaving(false);
+    }
+  };
+
+  const handleEndParty = async () => {
+    setEnding(true);
+    setError(null);
+    try {
+      await endParty();
+      goHome();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong.');
+      setEnding(false);
+      setConfirmingEnd(false);
     }
   };
 
@@ -91,6 +136,7 @@ export default function IdentifyScreen() {
         try {
           await joinAsUser();
           if (!cancelled) {
+            setError(null);
             setStatus(Status.joined);
           }
         } catch (e) {
@@ -187,7 +233,8 @@ export default function IdentifyScreen() {
             <Text style={styles.joinedSubtitle}>
               Party code: {session.party.code}
             </Text>
-            {session.kind === 'member' &&
+            {error && <Toast variant="error" message={error} />}
+            {session.kind === SessionKind.member &&
               session.member.role === PartyMemberRole.bartender && (
                 <Button
                   variant="secondary"
@@ -199,7 +246,7 @@ export default function IdentifyScreen() {
                   View Participants
                 </Button>
               )}
-            {session.kind === 'member' &&
+            {session.kind === SessionKind.member &&
               session.member.role === PartyMemberRole.customer &&
               user?.canCreateParty && (
                 <Button
@@ -213,6 +260,60 @@ export default function IdentifyScreen() {
                     : 'Become a bartender for this party'}
                 </Button>
               )}
+            {session.kind === SessionKind.member &&
+              session.member.role === PartyMemberRole.bartender && (
+                <Button
+                  variant="secondary"
+                  onPress={handleDropRole}
+                  disabled={droppingRole}
+                  testID="identify-drop-role-button"
+                >
+                  {droppingRole ? 'Stepping down…' : 'Drop bartender role'}
+                </Button>
+              )}
+            {session.kind === SessionKind.member && !confirmingEnd && (
+              <Button
+                variant="secondary"
+                onPress={handleLeave}
+                disabled={leaving}
+                testID="identify-leave-button"
+              >
+                {leaving ? 'Leaving…' : 'Leave Party'}
+              </Button>
+            )}
+            {session.kind === SessionKind.member &&
+              session.member.role === PartyMemberRole.bartender &&
+              !confirmingEnd && (
+                <Button
+                  variant="secondary"
+                  onPress={() => setConfirmingEnd(true)}
+                  testID="identify-end-party-button"
+                >
+                  End Party
+                </Button>
+              )}
+            {confirmingEnd && (
+              <View style={styles.confirmEnd}>
+                <Text style={styles.joinedSubtitle}>
+                  This ends the party for everyone and can't be undone.
+                </Text>
+                <Button
+                  onPress={handleEndParty}
+                  disabled={ending}
+                  testID="identify-confirm-end-party-button"
+                >
+                  {ending ? 'Ending…' : 'Yes, end the party'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onPress={() => setConfirmingEnd(false)}
+                  disabled={ending}
+                  testID="identify-cancel-end-party-button"
+                >
+                  Cancel
+                </Button>
+              </View>
+            )}
           </View>
         )}
       </View>
@@ -253,5 +354,8 @@ const styles = StyleSheet.create({
   },
   joinedActions: {
     gap: spacing.md,
+  },
+  confirmEnd: {
+    gap: spacing.sm,
   },
 });

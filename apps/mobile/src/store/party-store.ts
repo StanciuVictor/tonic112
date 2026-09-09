@@ -35,8 +35,13 @@ interface PartyState {
   resolveCode: (code: string) => Promise<PartyDto>;
   joinAsGuest: (guestName: string) => Promise<void>;
   joinAsUser: () => Promise<PartyMemberDto>;
+  setMemberSession: (party: PartyDto, member: PartyMemberDto) => Promise<void>;
   refreshMyMembership: () => Promise<void>;
   restoreSession: () => Promise<void>;
+  restoreActiveParty: () => Promise<void>;
+  demoteSelf: () => Promise<PartyMemberDto>;
+  leave: () => Promise<void>;
+  endParty: () => Promise<void>;
   clear: () => Promise<void>;
 }
 
@@ -79,10 +84,14 @@ export const usePartyStore = create<PartyState>((set, get) => ({
       throw new Error('Not authenticated');
     }
     const member = await partyClient.joinAsUser(party.code, token);
+    await get().setMemberSession(party, member);
+    return member;
+  },
+
+  setMemberSession: async (party, member) => {
     const session: PartySession = { kind: SessionKind.member, party, member };
     await storage.setItem(SESSION_KEY, JSON.stringify(session));
-    set({ session });
-    return member;
+    set({ party, session });
   },
 
   refreshMyMembership: async () => {
@@ -114,6 +123,68 @@ export const usePartyStore = create<PartyState>((set, get) => ({
     } catch {
       await storage.deleteItem(SESSION_KEY);
     }
+  },
+
+  restoreActiveParty: async () => {
+    const token = useAuthStore.getState().token;
+    if (!token) {
+      return;
+    }
+    try {
+      const { party, member } = await partyClient.fetchMyActiveParty(token);
+      await get().setMemberSession(party, member);
+    } catch {
+      // No active party on the server (or the check failed) — if we had a
+      // stale locally-cached member session, it's no longer valid either.
+      if (get().session?.kind === SessionKind.member) {
+        await storage.deleteItem(SESSION_KEY);
+        set({ party: null, session: null });
+      }
+    }
+  },
+
+  demoteSelf: async () => {
+    const session = get().session;
+    if (!session || session.kind !== SessionKind.member) {
+      throw new Error('Not a member of a party');
+    }
+    const token = useAuthStore.getState().token;
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    const member = await partyClient.demoteSelf(session.party.code, token);
+    const updated: PartySession = { ...session, member };
+    await storage.setItem(SESSION_KEY, JSON.stringify(updated));
+    set({ session: updated });
+    return member;
+  },
+
+  leave: async () => {
+    const session = get().session;
+    if (!session || session.kind !== SessionKind.member) {
+      throw new Error('Not a member of a party');
+    }
+    const token = useAuthStore.getState().token;
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    await partyClient.leaveParty(session.party.code, token);
+    await storage.deleteItem(SESSION_KEY);
+    set({ party: null, session: null });
+  },
+
+  endParty: async () => {
+    const session = get().session;
+    if (!session || session.kind !== SessionKind.member) {
+      throw new Error('Not a member of a party');
+    }
+    const token = useAuthStore.getState().token;
+    if (!token) {
+      throw new Error('Not authenticated');
+    }
+    await partyClient.endParty(session.party.code, token);
+    await storage.deleteItem(SESSION_KEY);
+    set({ party: null, session: null });
   },
 
   clear: async () => {

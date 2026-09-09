@@ -67,3 +67,8 @@ export interface GuestParticipantDto {
 }
 
 export type ParticipantDto = MemberParticipantDto | GuestParticipantDto;
+
+export interface ActivePartyMembershipDto {
+  party: PartyDto;
+  member: PartyMemberDto;
+}
