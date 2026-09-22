@@ -10,9 +10,16 @@ export interface HeaderBandProps {
   children: ReactNode;
   /** Shows a QR/code icon on the band, for pulling up the current party's invite info. */
   onQrPress?: () => void;
+  /** Shows a back-chevron icon on the leading edge of the band, for nested screens. */
+  onBackPress?: () => void;
 }
 
-export function HeaderBand({ accent, children, onQrPress }: HeaderBandProps) {
+export function HeaderBand({
+  accent,
+  children,
+  onQrPress,
+  onBackPress,
+}: HeaderBandProps) {
   const t = buttonTokens.onHeader[accent];
   return (
     <View
@@ -24,6 +31,21 @@ export function HeaderBand({ accent, children, onQrPress }: HeaderBandProps) {
         },
       ]}
     >
+      {onBackPress && (
+        <Pressable
+          onPress={onBackPress}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          testID="header-back-button"
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={({ pressed }) => [
+            styles.sideButton,
+            { backgroundColor: pressed ? t.bgActive : t.bg },
+          ]}
+        >
+          <Ionicons name="chevron-back" size={20} color={t.fg} />
+        </Pressable>
+      )}
       <View style={styles.content}>{children}</View>
       {onQrPress && (
         <Pressable
@@ -33,7 +55,7 @@ export function HeaderBand({ accent, children, onQrPress }: HeaderBandProps) {
           testID="header-qr-button"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           style={({ pressed }) => [
-            styles.qrButton,
+            styles.sideButton,
             { backgroundColor: pressed ? t.bgActive : t.bg },
           ]}
         >
@@ -51,11 +73,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
   },
   content: {
+    flex: 1,
     flexShrink: 1,
   },
-  qrButton: {
+  sideButton: {
     width: 40,
     height: 40,
     borderRadius: 20,

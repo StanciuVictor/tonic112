@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { DrinkCategory } from '@tonic112/shared-types';
 
 /**
  * Central design-token module. Every component and screen must read colors,
@@ -64,6 +65,32 @@ export const statusColors: Record<
     text: '#565552', // oklch(45% 0.005 90)
     label: 'Cancelled',
   },
+};
+
+/**
+ * Category identity for the drink catalog (Epic 06) — swatch color and
+ * display label per DrinkCategory, used by DrinkIcon's fallback and the
+ * menu's category filter chips. `label` is a plain English string for now
+ * (Epic 11 hasn't built the i18n string mechanism yet — the epic doc's own
+ * "render `en` for now" allowance). Unlike the rest of this file, these hex
+ * values are a direct, provisional pick rather than an OKLCH-sourced
+ * approved design value — there's no design source for 10 category colors
+ * yet, so expect these to be revisited.
+ */
+export const categoryColors: Record<
+  DrinkCategory,
+  { swatch: string; label: string }
+> = {
+  cocktail: { swatch: colors.accent.coral, label: 'Cocktail' },
+  mocktail: { swatch: colors.accent.teal, label: 'Mocktail' },
+  shot: { swatch: colors.accent.yellow, label: 'Shot' },
+  beer: { swatch: '#E8A33D', label: 'Beer' },
+  wine: { swatch: '#C24A6B', label: 'Wine' },
+  champagne: { swatch: '#D9C27A', label: 'Champagne' },
+  spirit: { swatch: '#8E7CC3', label: 'Spirit' },
+  liqueur: { swatch: '#B54F8C', label: 'Liqueur' },
+  non_alcoholic: { swatch: '#5FB878', label: 'Non-alcoholic' },
+  hot_drink: { swatch: '#A9714A', label: 'Hot drink' },
 };
 
 /**
