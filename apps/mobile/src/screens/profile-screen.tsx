@@ -44,6 +44,15 @@ export default function ProfileScreen() {
             Start a Party
           </Button>
         )}
+        {user?.isAdmin && (
+          <Button
+            variant="secondary"
+            onPress={() => router.push('/admin/catalog')}
+            testID="profile-manage-catalog-button"
+          >
+            Manage Catalog
+          </Button>
+        )}
         <Button
           variant="secondary"
           onPress={handleLogout}
