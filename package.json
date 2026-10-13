@@ -40,7 +40,7 @@
     "jest-expo": "~56.0.4",
     "jest-util": "~30.3.0",
     "jsonc-eslint-parser": "^2.1.0",
-    "nx": "23.1.1",
+    "nx": "23.2.1",
     "prettier": "~3.6.2",
     "react-test-renderer": "19.2.3",
     "ts-jest": "^29.4.7",
