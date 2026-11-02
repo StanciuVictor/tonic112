@@ -8,7 +8,7 @@
   "private": true,
   "devDependencies": {
     "@eslint/js": "^9.8.0",
-    "@expo/cli": "~56.1.14",
+    "@expo/cli": "~58.1.18",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.0",
     "@nx/eslint": "23.1.1",
@@ -75,7 +75,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "dotenv": "^17.3.1",
-    "expo": "~56.0.0",
+    "expo": "~58.0.22",
     "expo-constants": "~56.0.23",
     "expo-font": "^56.0.7",
     "expo-linking": "~56.0.16",
