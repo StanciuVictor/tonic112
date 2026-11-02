@@ -234,6 +234,12 @@ export default function IdentifyScreen() {
               Party code: {session.party.code}
             </Text>
             {error && <Toast variant="error" message={error} />}
+            <Button
+              onPress={() => router.push('/menu')}
+              testID="identify-browse-menu-button"
+            >
+              Browse Menu
+            </Button>
             {session.kind === SessionKind.member &&
               session.member.role === PartyMemberRole.bartender && (
                 <Button

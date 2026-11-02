@@ -89,6 +89,13 @@ export default function BartenderHomeScreen() {
             {error && <Toast variant="error" message={error} />}
             <Button
               variant="secondary"
+              onPress={() => router.push('/menu')}
+              testID="bartender-browse-menu-button"
+            >
+              Browse Menu
+            </Button>
+            <Button
+              variant="secondary"
               onPress={() => router.push(`/participants?code=${party.code}`)}
               testID="view-participants-button"
             >
